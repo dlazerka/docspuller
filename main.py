@@ -1,44 +1,54 @@
+# -*- coding: windows-1251 -*-
+
 from Tkinter import *
-def v(val):
-	print val
+
+"""
+ToDo:
+	+ Core
+	* UI's API
+		+ add new queue entry
+	+ Downloader
+	+ Parser
+	+ Storer
+"""
 
 class Application(Frame):
+	""" UI """
+
+	entries = 0
+
 	def __init__(self, master=None):
 		Frame.__init__(self, master)
-		self.pack()
-		self.createWidgets()
-	def exit(self, event):
-		self.quit()
+		self.__createWidgets()
+		self.__setBindings()
 
-	def createWidgets(self):
-		#self.canvas1 = Canvas(self, {})
-		#self.canvas2 = Canvas(self, {})
-		#self.but1 = Button(self.canvas2, {'width': 5, 'height':2, 'text': 'Quit', 'command': self.quit})
-		#self.label1 = Label(self.canvas1, {'text':'First Page: '})
-		#self.label2 = Label(self.canvas1, {'text':'RegExp: '})
-		#self.entry1 = Entry(self.canvas1, {'width': 30})
-		#self.entry2 = Entry(self.canvas1, {'width': 30})
-		self.but1 = Button(self, {'text': 'Quit', 'command': self.quit, 'width': 5, 'height':2})
+	def __createWidgets(self):
+		self.but1 = Button(self, {'text': 'Quit', 'command': self.quit, 'width': 8})
 		self.label1 = Label(self, {'text':'First Page: '})
 		self.label2 = Label(self, {'text':'RegExp: '})
-		self.entry1 = Entry(self, {'width': 30})
-		self.entry2 = Entry(self, {'width': 30})
+		self.entry1 = Entry(self)
+		self.entry2 = Entry(self)
+		self.text1 = Text(self, {'height': 10})
 
-		#self.label1.pack({'side': 'left'})
-		#self.entry1.pack({'side': 'left'})
-		#self.entry2.pack({'side': 'top', 'side': 'left'})
-		#self.canvas2.pack({'side': 'right', 'fill': 'y'})
-		#self.canvas1.pack({'fill': 'both'})
-		#self.but1.pack({'side': 'top', 'fill': 'y'})
-		#self.label1.pack({'side': 'left'})
-		#self.entry1.pack({'side': 'left'})
-		#self.entry2.pack({'side': 'bottom'})
-		self.label1.grid({'row': 0, 'column': 0});
-		self.label2.grid({'row': 1, 'column': 0});
-		self.entry1.grid({'row': 0, 'column': 1});
-		self.entry2.grid({'row': 1, 'column': 1});
-		self.but1.grid({'row': 0, 'column': 2, 'rowspan': 2});
-		self.master.bind('<Escape>', self.exit);
+		self.pack({'fill': 'both', 'expand': 'yes'});
+		self.label1.grid({'row': 0, 'column': 0})
+		self.label2.grid({'row': 1, 'column': 0})
+		self.entry1.grid({'row': 0, 'column': 1, 'sticky': 'we'})
+		self.entry2.grid({'row': 1, 'column': 1, 'sticky': 'we'})
+		self.but1.grid({'row': 0, 'column': 2, 'rowspan': 2, 'sticky': 'ns'})
+		self.text1.grid({'row': 2, 'column': 0, 'columnspan': 3, 'sticky': 'nswe'})
+		self.columnconfigure(1, {'weight': 1});
+		self.rowconfigure(2, {'weight': 1, 'minsize': '50'});
+
+	def __setBindings(self):
+		self.master.bind('<Escape>', lambda event: self.quit())
+		self.master.bind('<t>', lambda event: self.addDownloadEntry(name = "t"))
+
+	def addDownloadEntry(self, name):
+		self.entries += 1
+		self.text1.insert('%d.end' % self.entries, '%d: %s\n' % (self.entries, name))
 
 app = Application()
+app.addDownloadEntry(name = 'kuku')
 app.mainloop()
+
