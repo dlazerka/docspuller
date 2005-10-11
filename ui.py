@@ -1,19 +1,12 @@
 # -*- coding: windows-1251 -*-
+"""
+Handles GUI.
+"""
 
 from Tkinter import *
 
-"""
-ToDo:
-	+ Core
-	* UI's API
-		+ add new queue entry
-	+ Downloader
-	+ Parser
-	+ Storer
-"""
 
 class Application(Frame):
-	""" UI """
 
 	entries = 0
 
@@ -44,11 +37,13 @@ class Application(Frame):
 		self.master.bind('<Escape>', lambda event: self.quit())
 		self.master.bind('<t>', lambda event: self.addDownloadEntry(name = "t"))
 
-	def addDownloadEntry(self, name):
+	def addEntry(self, name):
 		self.entries += 1
 		self.text1.insert('%d.end' % self.entries, '%d: %s\n' % (self.entries, name))
 
-app = Application()
-app.addDownloadEntry(name = 'kuku')
-app.mainloop()
 
+class ui(Application):
+	def __init__(self):
+		Application.__init__(self)
+		self.addEntry('started')
+		self.mainloop()
