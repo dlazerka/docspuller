@@ -6,7 +6,7 @@ Handles getting files from internet.
 from urllib import *
 
 
-class getter:
+class Getter:
 	def __init__(self, main):
 		self.main = main
 

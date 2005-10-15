@@ -6,12 +6,7 @@ Handles storing recieved files.
 import re
 
 
-class storer:
-
-
-	basePath = ''
-
-
+class Storer:
 	def __init__(self, main):
 		self.main = main
 
