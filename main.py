@@ -1,26 +1,47 @@
 """
 ToDo:
+	at first make to download single file
+
 	+ Core
 	* UI's API
 		+ add new queue entry
-	+ Getter
+	* Getter
 	+ Parser
-	+ Storer
+	* Storer
 """
 
+from controller import *
 from ui import *
 from getter import *
 from storer import *
 
-ui = ui()
-getter = getter()
-#parser = parser()
-storer = storer(re.search(r'(.*)[/\\]', __file__).group(1))
 
-url = 'http://localhost/index.php'
+class main:
+	def __init__(self):
+		self.getter = getter(self)
+		self.storer = storer(self)
+		self.controller = controller(self)
+		self.ui = ui(self)
 
-ui.addEntry(url)
-page = getter.get(url)
-storer.store(page, url)
+		self.ui.mainloop()
+
+
+
+	def start(self):
+		storer.setBasePath(ui.getBasePath())
+		basePath = ui.getBasePath()
+		url = ui.getFirstUrl()
+		print basePath, url
+
+
+
+main()
+
+
+#basePath = re.search(r'(.*)[/\\]', __file__).group(1);
+#url = 'http://localhost/index.php'
+
+#page = getter.get(url)
+#storer.store(page, url)
 
 

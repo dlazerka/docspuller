@@ -12,7 +12,11 @@ class storer:
 	basePath = ''
 
 
-	def __init__(self, basePath):
+	def __init__(self, main):
+		self.main = main
+
+
+	def setBasePath(self, basePath):
 		self.basePath = basePath
 
 
@@ -23,7 +27,6 @@ class storer:
 
 	def save(self, page, path):
 		contents = page.read()
-		print path
 		dst = file(path, 'w')
 		dst.write(contents)
 		dst.close()
