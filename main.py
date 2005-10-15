@@ -1,5 +1,6 @@
 """
 ToDo:
+	* ui: grid -> pack
 
 """
 
@@ -21,5 +22,6 @@ class Main:
 		self.ui = Ui(self)
 
 		self.ui.mainloop()
+
 
 Main()

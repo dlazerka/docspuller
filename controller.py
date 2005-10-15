@@ -34,6 +34,7 @@ class Controller:
 			page = self.main.getter.get(url)
 			self.main.storer.store(page, url)
 
+		return startController
 
 	def getFirstUrlTypingController(self):
 		def firstUrlTypingController(*args):
@@ -42,10 +43,12 @@ class Controller:
 			self.main.ui.entryTestUrl.insert('end', firstUrl)
 		return firstUrlTypingController
 
+
 	def getRegExpTypingController(self):
 		def regExpTypingController(*args):
 			regExp = self.main.ui.entryRegExp.get()
 			testUrl = self.main.ui.entryTestUrl.get()
+
 			try:
 				re.compile(regExp)
 			except re.error, inst:

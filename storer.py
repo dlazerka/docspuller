@@ -12,7 +12,10 @@ class Storer:
 
 
 	def setBasePath(self, basePath):
-		self.basePath = basePath
+		if (basePath[-1:] == '/'):
+			self.basePath = basePath[0:-1]
+		else:
+			self.basePath = basePath
 
 
 	def store(self, page, url):
