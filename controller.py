@@ -57,7 +57,7 @@ class Controller:
 			else:
 				if (re.search(regExp, testUrl)):
 					text =  'True'
-					fg = 'black'
+					fg = '#080'
 				else:
 					text =  'False'
 					fg = 'red'

@@ -1,6 +1,7 @@
 """
 ToDo:
-	* ui: grid -> pack
+	* Start -> Stop after pressing
+	* Parsing
 
 """
 
