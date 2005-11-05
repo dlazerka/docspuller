@@ -11,5 +11,5 @@ class PageParser:
 		self.regExp = regExp
 
 
-	def parse(self, file):
+	def parse(self, page):
 		pass

@@ -1,7 +1,7 @@
-d = {'ku': 'kuku', 'uk': 'ukuk'}
-l = []
-for i, k in d.iteritems():
-	l.append([i, k])
-l.append(['column', 0])
-l.append(['row', 0])
-print dict(l)
+a = ['4']
+a.append('as')
+
+try:
+	print a[2]
+except IndexError:
+	print None

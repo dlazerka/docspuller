@@ -8,12 +8,18 @@ from Tkinter import *
 
 class Ui(Frame):
 
-	entries = 0
+	pagesListed = []
 
 	def __init__(self, main):
 		Frame.__init__(self)
 		self.main = main
 		self.__createWidgets()
+		self.refresh()
+
+
+	def mainloop(self):
+		self.__setDefaultValues()
+		Frame.mainloop(self)
 
 
 	def __createWidgets(self):
@@ -43,24 +49,24 @@ class Ui(Frame):
 		self.entryTestUrl = Entry(frameTestUrl)
 
 		self.buttonQuit = Button(frameButtons, {'text': 'Quit', 'width': 8})
-		self.buttonStart = Button(frameButtons, {'text': 'Start', 'width': 8})
+		self.buttonControl = Button(frameButtons, {'width': 8})
 
-		self.textTable = Text(self, {'height': 5})
-		self.textTable.mark_set('last_line', '1.end')
-		self.textTable.mark_gravity('last_line', 'right')
+		self.pagesList = Text(self, {'height': 5})
+		self.pagesList.mark_set('last_line', '1.end')
+		self.pagesList.mark_gravity('last_line', 'right')
 
 
 		# Pack level 0
 		self.pack({'fill': 'both', 'expand': 'yes'});
 
 		# Pack level 1
-		self.textTable.pack({'side': 'bottom', 'fill': 'both', 'expand': 'yes'})
+		self.pagesList.pack({'side': 'bottom', 'fill': 'both', 'expand': 'yes'})
 		frameParams.pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
 		frameButtons.pack({'side': 'left', 'fill': 'y'})
 
 		# Pack level 2
 		self.buttonQuit.pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
-		self.buttonStart.pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
+		self.buttonControl.pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
 
 		frameFirstUrl.pack({'side': 'top', 'fill': 'x'})
 		self.labelFirstUrl.pack({'side': 'left'})
@@ -84,21 +90,43 @@ class Ui(Frame):
 
 
 		# Binds
-		self.buttonStart.configure({'command': self.main.controller.getStartController()})
-		self.buttonQuit.configure({'command': self.main.controller.getQuitController()})
-		self.master.bind('<Escape>', self.main.controller.getQuitController())
-		self.entryFirstUrl.bind('<KeyRelease>', self.main.controller.getFirstUrlTypingController())
-		self.entryRegExp.bind('<KeyRelease>', self.main.controller.getRegExpTypingController())
+		self.buttonControl.configure({'command': self.main.controller.getStart()})
+		self.buttonQuit.configure({'command': self.main.controller.getQuit()})
+		self.master.bind('<Escape>', self.main.controller.getQuit())
+		self.entryFirstUrl.bind('<KeyRelease>', self.main.controller.getFirstUrlTyping())
+		self.entryRegExp.bind('<KeyRelease>', self.main.controller.getRegExpTyping())
+
+
+	def refresh(self):
+		if self.main.status == 'inactive':
+			self.buttonControl.configure({'text': 'Start', 'command': self.main.controller.getStart()})
+			self.entryFirstUrl.configure({'state': 'normal'})
+			self.entryLocalPath.configure({'state': 'normal'})
+		else:
+			self.buttonControl.configure({'text': 'Stop', 'command': self.main.controller.getStop()})
+			self.entryFirstUrl.configure({'state': 'readonly'})
+			self.entryLocalPath.configure({'state': 'readonly'})
+
+
+	def refreshPage(self, page):
+		if page in self.pagesListed:
+			line = self.pagesListed.index(page) + 1
+			self.pagesList.delete('%d.0' % line, '%d.end' % line)
+		else:
+			self.pagesListed.append(page)
+			line = len(self.pagesListed)
+
+		self.pagesList.insert('%d.end' % line, '%s    %s' % (page.url, page.status))
+		if page.path:
+			self.pagesList.insert('%d.end' % line, '    %s' % (page.path))
+		self.pagesList.insert('%d.end' % line, '\n')
+
+
 
 
 	def __setDefaultValues(self):
-		self.entryFirstUrl.insert('end', 'http://localhost/index.php')
+		self.entryFirstUrl.insert('end', 'http://localhost/common/sd.php')
 		self.entryRegExp.insert('end', '^.*$')
 		self.entryLocalPath.insert('end', '/usr/!')
 		self.entryTestUrl.insert('end', self.entryFirstUrl.get())
-		self.main.controller.getRegExpTypingController()()
-
-
-	def mainloop(self):
-		self.__setDefaultValues()
-		Frame.mainloop(self)
+		self.main.controller.getRegExpTyping()()

@@ -4,6 +4,9 @@ Implements control functions
 
 
 import re
+import time
+import thread
+from page import *
 
 
 class Controller:
@@ -11,41 +14,71 @@ class Controller:
 		self.main = main
 
 
-	def getQuitController(self):
-		def quitController(*args):
+	def getPage(self, url):
+		self.main.ui.textTable.insert('last_line', '%s\tkuku\n' % url)
+
+		page = self.main.getter.get(url)
+
+		self.main.storer.store(page, url)
+
+		return self.main.pageParser.parse(page)
+
+
+	def getQuit(self):
+		def quit(*args):
 			self.main.ui.quit()
 
-		return quitController
+		return quit
 
 
-	def getStartController(self):
-		def startController(*args):
+	def getStart(self):
+		def start(*args):
+			self.main.setStatus('active')
+
 			url = self.main.ui.entryFirstUrl.get()
 			localPath = self.main.ui.entryLocalPath.get()
 			regExp = self.main.ui.entryRegExp.get()
 
-			self.main.ui.entryFirstUrl.configure({'state': 'readonly'})
-			self.main.ui.entryLocalPath.configure({'state': 'readonly'})
-
 			self.main.storer.setBasePath(localPath)
-			self.main.parser.setRegExp(regExp)
+			self.main.pageParser.setRegExp(regExp)
+			page = self.main.storer.queue(url)
 
-			self.main.ui.textTable.insert('last_line', 'kuku')
-			page = self.main.getter.get(url)
-			self.main.storer.store(page, url)
+			self.main.ui.refresh()
+			self.main.ui.refreshPage(page)
 
-		return startController
+			thread.start_new_thread(self.__loop, ())
 
-	def getFirstUrlTypingController(self):
-		def firstUrlTypingController(*args):
+		return start
+
+
+	def __loop(self):
+		while self.main.status == 'active':
+			page = self.main.storer.storeNext()
+			if page:
+				self.main.ui.refreshPage(page)
+			else:
+				self.getStop()()
+
+
+	def getStop(self):
+		def stop(*args):
+			self.main.status = 'inactive'
+
+			self.main.ui.refresh()
+
+		return stop
+
+
+	def getFirstUrlTyping(self):
+		def firstUrlTyping(*args):
 			firstUrl = self.main.ui.entryFirstUrl.get()
 			self.main.ui.entryTestUrl.delete('0', 'end')
 			self.main.ui.entryTestUrl.insert('end', firstUrl)
-		return firstUrlTypingController
+		return firstUrlTyping
 
 
-	def getRegExpTypingController(self):
-		def regExpTypingController(*args):
+	def getRegExpTyping(self):
+		def regExpTyping(*args):
 			regExp = self.main.ui.entryRegExp.get()
 			testUrl = self.main.ui.entryTestUrl.get()
 
@@ -64,4 +97,4 @@ class Controller:
 
 			self.main.ui.labelTestResult.configure({'fg': fg, 'text': text})
 
-		return regExpTypingController
+		return regExpTyping
