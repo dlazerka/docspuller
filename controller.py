@@ -1,100 +1,70 @@
-"""
-Implements control functions
-"""
-
-
-import re
-import time
-import thread
-from page import *
+from model import *
 
 
 class Controller:
-	def __init__(self, main):
-		self.main = main
+	status = 'inactive'
 
 
-	def getPage(self, url):
-		self.main.ui.textTable.insert('last_line', '%s\tkuku\n' % url)
+	@classmethod
+	def start(cls, *args):
+		cls.status = 'active'
 
-		page = self.main.getter.get(url)
-
-		self.main.storer.store(page, url)
-
-		return self.main.pageParser.parse(page)
+		project = ProjectFactory.getCurrentProject()
+		page = Page(project.)
 
 
-	def getQuit(self):
-		def quit(*args):
-			self.main.ui.quit()
+		cls.main.ui.refresh()
+		cls.main.ui.refreshPage(page)
 
-		return quit
+		cls.__loop()
 
-
-	def getStart(self):
-		def start(*args):
-			self.main.setStatus('active')
-
-			url = self.main.ui.entryFirstUrl.get()
-			localPath = self.main.ui.entryLocalPath.get()
-			regExp = self.main.ui.entryRegExp.get()
-
-			self.main.storer.setBasePath(localPath)
-			self.main.pageParser.setRegExp(regExp)
-			page = self.main.storer.queue(url)
-
-			self.main.ui.refresh()
-			self.main.ui.refreshPage(page)
-
-			thread.start_new_thread(self.__loop, ())
-
-		return start
+		#thread.start_new_thread(cls.__loop, ())
 
 
-	def __loop(self):
-		while self.main.status == 'active':
-			page = self.main.storer.storeNext()
-			if page:
-				self.main.ui.refreshPage(page)
-			else:
-				self.getStop()()
+	@classmethod
+	def stop(*args):
+		cls.main.status = 'inactive'
+
+		cls.main.ui.refresh()
 
 
-	def getStop(self):
-		def stop(*args):
-			self.main.status = 'inactive'
-
-			self.main.ui.refresh()
-
-		return stop
-
-
-	def getFirstUrlTyping(self):
-		def firstUrlTyping(*args):
-			firstUrl = self.main.ui.entryFirstUrl.get()
-			self.main.ui.entryTestUrl.delete('0', 'end')
-			self.main.ui.entryTestUrl.insert('end', firstUrl)
-		return firstUrlTyping
-
-
-	def getRegExpTyping(self):
-		def regExpTyping(*args):
-			regExp = self.main.ui.entryRegExp.get()
-			testUrl = self.main.ui.entryTestUrl.get()
-
-			try:
-				re.compile(regExp)
-			except re.error, inst:
-				text = inst.__str__()
-				fg = 'red'
-			else:
-				if (re.search(regExp, testUrl)):
-					text =  'True'
-					fg = '#080'
+	@classmethod
+	def __loop(cls):
+		try:
+			while cls.status == 'active':
+				page = cls.main.storer.storeNext()
+				if page:
+					cls.main.ui.refreshPage(page)
 				else:
-					text =  'False'
-					fg = 'red'
+					cls.stop()
+		except Exception, e:
+			print id(e)
 
-			self.main.ui.labelTestResult.configure({'fg': fg, 'text': text})
 
-		return regExpTyping
+	@classmethod
+	def firstUrlTyping(*args):
+		firstUrl = cls.main.ui.entryFirstUrl.get()
+		cls.main.ui.entryTestUrl.delete('0', 'end')
+		cls.main.ui.entryTestUrl.insert('end', firstUrl)
+
+
+	@classmethod
+	def regExpTyping(cls, *args):
+		return
+		regExp = Ui.entryRegExp.get()
+		testUrl = cls.main.ui.entryTestUrl.get()
+
+		try:
+			re.compile(regExp)
+		except re.error, inst:
+			text = inst.__str__()
+			fg = 'red'
+		else:
+			if (re.search(regExp, testUrl)):
+				text =  'True'
+				fg = '#080'
+			else:
+				text =  'False'
+				fg = 'red'
+
+		cls.main.ui.labelTestResult.configure({'fg': fg, 'text': text})
