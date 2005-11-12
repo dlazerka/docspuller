@@ -1,133 +1,233 @@
 from Tkinter import *
-from controller import Controller
-from model import ProjectFactory
+from tkFont import *
+import re
+
+from controller import *
+import model as MODEL
 
 
-class View:
+class _View:
 	widgets = None
+	fonts = None
+	tk = None
 
 
-	@classmethod
-	def show(cls):
-		project = ProjectFactory.getCurrentProject()
-		project.registerObserver(cls.refreshControls)
+	def show(self):
+		self.widgets = dict()
+		self.fonts = dict()
+		self.pagesShown = []
+		self.tk = Tk()
 
-		cls.createWidgets()
-		cls.bind()
-		Frame.mainloop(cls.widgets['mainFrame'])
-		Controller.start()
+		self.createWidgets()
+		self.bind()
+		self.refreshControls()
+		self.regExpTyping()
+		MODEL.Project.pagesContainer.addNewPageListener(self.newPageOccured)
+
+		self.actStart()
+
+		Frame.mainloop(self.widgets['mainFrame'])
 
 
-	@classmethod
-	def quit(cls, *args):
-		cls.widgets['mainFrame'].quit()
+
+	def quit(self, *args):
+		self.widgets['mainFrame'].quit()
 
 
-	@classmethod
-	def createWidgets(cls):
-		cls.widgets = dict()
+	def newPageOccured(self, page):
+		page.addSavingListener(self.savingPageOccured)
+
+
+		lineStart = self.widgets['pagesList'].index('End')
+
+		self.widgets['pagesList'].insert('End', page.url);
+		self.widgets['pagesList'].insert('End', '    ');
+
+		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
+		self.widgets['pagesList'].mark_gravity('Page%sStatusStart' % id(page), 'left')
+		self.widgets['pagesList'].insert('End', page.status);
+		self.widgets['pagesList'].mark_set('Page%sStatusEnd' % id(page), 'End')
+		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'left')
+		self.widgets['pagesList'].insert('End', '    ');
+
+		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'right')
+		self.widgets['pagesList'].insert('End', page.path);
+
+		self.widgets['pagesList'].insert('End', '\n');
+
+		self.widgets['pagesList'].tag_add('Page%s' % id(page), lineStart, 'End');
+		self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
+			'background': '#ffeeee',
+		});
+
+
+	def savingPageOccured(self, page):
+		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
+		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
+		self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
+			'background': '#eeffee'
+		});
+
+
+	def bind(self):
+		# Binds
+		self.widgets['mainFrame'].master.bind('<Escape>', self.quit)
+		self.widgets['buttonQuit'].configure({'command': self.quit})
+		self.widgets['buttonControl'].configure({'command': self.actStart})
+		self.widgets['entryRegExp'].bind('<KeyRelease>', self.regExpTyping)
+
+
+	def actStart(self):
+		localDir = self.widgets['entryLocalDir'].get()
+		firstUrl = self.widgets['entryFirstUrl'].get()
+		regExp = self.widgets['entryRegExp'].get()
+		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
+
+
+	def refreshControls(self):
+		self.widgets['entryFirstUrl'].insert('0', MODEL.Project.settings['firstUrl'])
+		self.widgets['entryLocalDir'].insert('0', MODEL.Project.settings['localDir'])
+		self.widgets['entryRegExp'].insert('0', MODEL.Project.settings['regExp'])
+		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
+
+		if CONTROLLER.status == 'inactive':
+			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
+			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
+			self.widgets['entryLocalDir'].configure({'state': 'normal'})
+		else:
+			self.widgets['buttonControl'].configure({'text': 'Stop', 'command': self.actStop})
+			self.widgets['entryFirstUrl'].configure({'state': 'readonly'})
+			self.widgets['entryLocalDir'].configure({'state': 'readonly'})
+
+
+	def refreshPage(self, page):
+		if page in self.widgets['mainFrame'].pagesListed:
+			line = self.widgets['mainFrame'].pagesListed.index(page) + 1
+			self.widgets['mainFrame'].pagesList.delete('%d.0' % line, '%d.end' % line)
+		else:
+			self.widgets['mainFrame'].pagesListed.append(page)
+			line = len(self.widgets['mainFrame'].pagesListed)
+
+		self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '%s    %s' % (page.url, page.status))
+		if page.path:
+			self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '    %s' % (page.path))
+		self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '\n')
+
+
+	def regExpTyping(self, *args):
+		regExp = self.widgets['entryRegExp'].get()
+		testUrl = self.widgets['entryTestUrl'].get()
+
+		try:
+			re.compile(regExp)
+		except re.error, e:
+			text = e.__str__()
+			fg = 'red'
+		else:
+			if (re.search(regExp, testUrl)):
+				text =  'True'
+				fg = '#080'
+			else:
+				text =  'False'
+				fg = 'red'
+
+		self.widgets['labelTestResult'].configure({'fg': fg, 'text': text})
+
+
+	def createWidgets(self):
 		# Create frames to pack widgets to
-		cls.widgets['mainFrame'] = Frame()
+		self.widgets['mainFrame'] = Frame(self.tk)
 
-		cls.widgets['frameParams'] = Frame(cls.widgets['mainFrame'])
-		cls.widgets['frameButtons'] = Frame(cls.widgets['mainFrame'], {'cursor': 'hand2'})
+		self.widgets['frameParams'] = Frame(self.widgets['mainFrame'])
+		self.widgets['frameButtons'] = Frame(self.widgets['mainFrame'], {
+			'cursor': 'hand2'
+		})
 
-		cls.widgets['frameFirstUrl'] = Frame(cls.widgets['frameParams'])
-		cls.widgets['frameLocalPath'] = Frame(cls.widgets['frameParams'])
-		cls.widgets['frameRegExp'] = Frame(cls.widgets['frameParams'])
-		cls.widgets['frameTestUrl'] = Frame(cls.widgets['frameParams'])
-		cls.widgets['frameTestResult'] = Frame(cls.widgets['frameParams'])
+		self.widgets['frameFirstUrl'] = Frame(self.widgets['frameParams'])
+		self.widgets['frameLocalDir'] = Frame(self.widgets['frameParams'])
+		self.widgets['frameRegExp'] = Frame(self.widgets['frameParams'])
+		self.widgets['frameTestUrl'] = Frame(self.widgets['frameParams'])
+		self.widgets['frameTestResult'] = Frame(self.widgets['frameParams'])
 
 
 		# Create widgets
-		cls.widgets['labelFirstUrl'] = Label(cls.widgets['frameFirstUrl'], {'text': 'First Url: '})
-		cls.widgets['labelLocalPath'] = Label(cls.widgets['frameLocalPath'], {'text': 'Local Path: '})
-		cls.widgets['labelRegExp'] = Label(cls.widgets['frameRegExp'], {'text': 'RegExp: '})
-		cls.widgets['labelTestUrl'] = Label(cls.widgets['frameTestUrl'], {'text': 'Test Url: '})
-		cls.widgets['labelTestResultLabel'] = Label(cls.widgets['frameTestResult'], {'text': 'Test Result:'})
-		cls.widgets['labelTestResult'] = Label(cls.widgets['frameTestResult'])
+		self.widgets['labelFirstUrl'] = Label(self.widgets['frameFirstUrl'], {
+			'text': 'First Url: '
+		})
+		self.widgets['labelLocalDir'] = Label(self.widgets['frameLocalDir'], {
+			'text': 'Local Path: '
+		})
+		self.widgets['labelRegExp'] = Label(self.widgets['frameRegExp'], {
+			'text': 'RegExp: '
+		})
+		self.widgets['labelTestUrl'] = Label(self.widgets['frameTestUrl'], {
+			'text': 'Test Url: '
+		})
+		self.widgets['labelTestResultLabel'] = Label(self.widgets['frameTestResult'], {
+			'text': 'Test Result:'
+		})
+		self.widgets['labelTestResult'] = Label(self.widgets['frameTestResult'], {
+		})
 
-		cls.widgets['entryFirstUrl'] = Entry(cls.widgets['frameFirstUrl'])
-		cls.widgets['entryLocalPath'] = Entry(cls.widgets['frameLocalPath'])
-		cls.widgets['entryRegExp'] = Entry(cls.widgets['frameRegExp'])
-		cls.widgets['entryTestUrl'] = Entry(cls.widgets['frameTestUrl'])
+		self.widgets['entryFirstUrl'] = Entry(self.widgets['frameFirstUrl'])
+		self.widgets['entryLocalDir'] = Entry(self.widgets['frameLocalDir'])
+		self.widgets['entryRegExp'] = Entry(self.widgets['frameRegExp'])
+		self.widgets['entryTestUrl'] = Entry(self.widgets['frameTestUrl'])
 
-		cls.widgets['buttonQuit'] = Button(cls.widgets['frameButtons'], {'text': 'Quit', 'width': 8})
-		cls.widgets['buttonControl'] = Button(cls.widgets['frameButtons'], {'width': 8})
+		self.widgets['buttonQuit'] = Button(self.widgets['frameButtons'], {
+			'text': 'Quit',
+			'width': 8
+		})
+		self.widgets['buttonControl'] = Button(self.widgets['frameButtons'], {
+			'width': 8
+		})
 
-		cls.widgets['pagesList'] = Text(cls.widgets['mainFrame'], {'height': 5})
-		cls.widgets['pagesList'].mark_set('last_line', '1.end')
-		cls.widgets['pagesList'].mark_gravity('last_line', 'right')
+		self.fonts['pagesList'] = Font(self.tk,
+			size = 10,
+			family = 'Courier',
+			weight = 'bold'
+		)
+		self.widgets['pagesList'] = Text(self.widgets['mainFrame'], {
+			'height': 5,
+			'font': self.fonts['pagesList']
+		})
+		self.widgets['pagesList'].mark_set('End', '1.end')
+		self.widgets['pagesList'].mark_gravity('End', 'right')
+
 
 
 		# Pack level 0
-		cls.widgets['mainFrame'].pack({'fill': 'both', 'expand': 'yes'});
+		self.widgets['mainFrame'].pack({'fill': 'both', 'expand': 'yes'});
 
 		# Pack level 1
-		cls.widgets['pagesList'].pack({'side': 'bottom', 'fill': 'both', 'expand': 'yes'})
-		cls.widgets['frameParams'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
-		cls.widgets['frameButtons'].pack({'side': 'left', 'fill': 'y'})
+		self.widgets['pagesList'].pack({'side': 'bottom', 'fill': 'both', 'expand': 'yes'})
+		self.widgets['frameParams'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameButtons'].pack({'side': 'left', 'fill': 'y'})
 
 		# Pack level 2
-		cls.widgets['buttonQuit'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
-		cls.widgets['buttonControl'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
+		self.widgets['buttonQuit'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
+		self.widgets['buttonControl'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
 
-		cls.widgets['frameFirstUrl'].pack({'side': 'top', 'fill': 'x'})
-		cls.widgets['labelFirstUrl'].pack({'side': 'left'})
-		cls.widgets['entryFirstUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameFirstUrl'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['labelFirstUrl'].pack({'side': 'left'})
+		self.widgets['entryFirstUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
 
-		cls.widgets['frameLocalPath'].pack({'side': 'top', 'fill': 'x'})
-		cls.widgets['labelLocalPath'].pack({'side': 'left'})
-		cls.widgets['entryLocalPath'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameLocalDir'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['labelLocalDir'].pack({'side': 'left'})
+		self.widgets['entryLocalDir'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
 
-		cls.widgets['frameRegExp'].pack({'side': 'top', 'fill': 'x'})
-		cls.widgets['labelRegExp'].pack({'side': 'left'})
-		cls.widgets['entryRegExp'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameRegExp'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['labelRegExp'].pack({'side': 'left'})
+		self.widgets['entryRegExp'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
 
-		cls.widgets['frameTestUrl'].pack({'side': 'top', 'fill': 'x'})
-		cls.widgets['labelTestUrl'].pack({'side': 'left'})
-		cls.widgets['entryTestUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameTestUrl'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['labelTestUrl'].pack({'side': 'left'})
+		self.widgets['entryTestUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
 
-		cls.widgets['frameTestResult'].pack({'side': 'top', 'fill': 'x'})
-		cls.widgets['labelTestResultLabel'].pack({'side': 'left'})
-		cls.widgets['labelTestResult'].pack({'side': 'left'})
-
-
-	@classmethod
-	def bind(cls):
-		# Binds
-		cls.widgets['mainFrame'].master.bind('<Escape>', cls.quit)
-		cls.widgets['buttonQuit'].configure({'command': cls.quit})
-		cls.widgets['buttonControl'].configure({'command': Controller.start})
-		cls.widgets['entryFirstUrl'].bind('<KeyRelease>', Controller.firstUrlTyping)
-		cls.widgets['entryRegExp'].bind('<KeyRelease>', Controller.regExpTyping)
+		self.widgets['frameTestResult'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['labelTestResultLabel'].pack({'side': 'left'})
+		self.widgets['labelTestResult'].pack({'side': 'left'})
 
 
 
-	@classmethod
-	def refreshControls(cls):
-		cls.widgets['mainFrame'].entryTestUrl.insert('end', cls.widgets['mainFrame'].entryFirstUrl.get())
-		cls.controller.regExpTyping(cls.widgets['mainFrame'].entryRegExp.get())
-		if cls.controller.status == 'inactive':
-			cls.widgets['mainFrame'].buttonControl.configure({'text': 'Start', 'command': Controller.start})
-			cls.widgets['mainFrame'].entryFirstUrl.configure({'state': 'normal'})
-			cls.widgets['mainFrame'].entryLocalPath.configure({'state': 'normal'})
-		else:
-			cls.widgets['mainFrame'].buttonControl.configure({'text': 'Stop', 'command': Controller.stop})
-			cls.widgets['mainFrame'].entryFirstUrl.configure({'state': 'readonly'})
-			cls.widgets['mainFrame'].entryLocalPath.configure({'state': 'readonly'})
-
-
-	@classmethod
-	def refreshPage(cls, page):
-		if page in cls.widgets['mainFrame'].pagesListed:
-			line = cls.widgets['mainFrame'].pagesListed.index(page) + 1
-			cls.widgets['mainFrame'].pagesList.delete('%d.0' % line, '%d.end' % line)
-		else:
-			cls.widgets['mainFrame'].pagesListed.append(page)
-			line = len(cls.widgets['mainFrame'].pagesListed)
-
-		cls.widgets['mainFrame'].pagesList.insert('%d.end' % line, '%s    %s' % (page.url, page.status))
-		if page.path:
-			cls.widgets['mainFrame'].pagesList.insert('%d.end' % line, '    %s' % (page.path))
-		cls.widgets['mainFrame'].pagesList.insert('%d.end' % line, '\n')
+VIEW = _View()

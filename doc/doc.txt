@@ -1,7 +1,6 @@
 ToDo:
-	* PageParser: RegExp searching for (href|rel)="$>1"
-	! extra CR in stored file
-
+	> Parsing
+	* relative pathes in UI
 	* maybe Ui: Stop -> Pause
 
 
@@ -10,21 +9,6 @@ Program Statuses:
 	active
 Page statuses:
 	queued
-	(downloading)
 	stored
 	parsed
 
-
-	
-storer:
-	pages:
-		count
-		get(offset = 0)
-	hasPage(url)
-	store(page, url)
-	
-ui:
-	refresh()
-	mainloop()
-	__createWidgets()
-	__packWidgets()
