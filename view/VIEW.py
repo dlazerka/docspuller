@@ -2,11 +2,12 @@ from Tkinter import *
 from tkFont import *
 import re
 
-from controller import *
-import model as MODEL
+import controller.CONTROLLER as CONTROLLER
+import model.MODEL as MODEL
+#from model.Status import Status
 
 
-class _View:
+class Ui:
 	widgets = None
 	fonts = None
 	tk = None
@@ -22,9 +23,9 @@ class _View:
 		self.bind()
 		self.refreshControls()
 		self.regExpTyping()
-		MODEL.Project.pagesContainer.addNewPageListener(self.newPageOccured)
+		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.newPageOccured)
 
-		self.actStart()
+		#self.actStart()
 
 		Frame.mainloop(self.widgets['mainFrame'])
 
@@ -35,12 +36,13 @@ class _View:
 
 
 	def newPageOccured(self, page):
-		page.addSavingListener(self.savingPageOccured)
-
+		page.addStatusListener(self.statusPageOccured)
 
 		lineStart = self.widgets['pagesList'].index('End')
 
 		self.widgets['pagesList'].insert('End', page.url);
+		self.widgets['pagesList'].insert('End', '  ->  ');
+		self.widgets['pagesList'].insert('End', page.path);
 		self.widgets['pagesList'].insert('End', '    ');
 
 		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
@@ -48,25 +50,22 @@ class _View:
 		self.widgets['pagesList'].insert('End', page.status);
 		self.widgets['pagesList'].mark_set('Page%sStatusEnd' % id(page), 'End')
 		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'left')
-		self.widgets['pagesList'].insert('End', '    ');
-
-		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'right')
-		self.widgets['pagesList'].insert('End', page.path);
-
 		self.widgets['pagesList'].insert('End', '\n');
+		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'right')
+
 
 		self.widgets['pagesList'].tag_add('Page%s' % id(page), lineStart, 'End');
-		self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
-			'background': '#ffeeee',
-		});
+		#self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
+		#	'background': '#ffeeee',
+		#});
 
 
-	def savingPageOccured(self, page):
+	def statusPageOccured(self, page):
 		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
 		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
-		self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
-			'background': '#eeffee'
-		});
+		#self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
+		#	'background': '#eeffee'
+		#});
 
 
 	def bind(self):
@@ -84,13 +83,13 @@ class _View:
 		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
 
 
-	def refreshControls(self):
-		self.widgets['entryFirstUrl'].insert('0', MODEL.Project.settings['firstUrl'])
-		self.widgets['entryLocalDir'].insert('0', MODEL.Project.settings['localDir'])
-		self.widgets['entryRegExp'].insert('0', MODEL.Project.settings['regExp'])
-		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
+	def actStop(self):
+		pass
 
-		if CONTROLLER.status == 'inactive':
+
+	def refreshControls(self):
+		if MODEL.siteDownloader.status == 'inactive':
+
 			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
 			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
 			self.widgets['entryLocalDir'].configure({'state': 'normal'})
@@ -98,6 +97,12 @@ class _View:
 			self.widgets['buttonControl'].configure({'text': 'Stop', 'command': self.actStop})
 			self.widgets['entryFirstUrl'].configure({'state': 'readonly'})
 			self.widgets['entryLocalDir'].configure({'state': 'readonly'})
+
+		project = MODEL.siteDownloader.project
+		self.widgets['entryFirstUrl'].insert('0', 'http://localhost/common/sd.php')
+		self.widgets['entryLocalDir'].insert('0', project.settings['localDir'])
+		self.widgets['entryRegExp'].insert('0', project.settings['regExp'])
+		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
 
 
 	def refreshPage(self, page):
@@ -188,6 +193,7 @@ class _View:
 			weight = 'bold'
 		)
 		self.widgets['pagesList'] = Text(self.widgets['mainFrame'], {
+			'width': 100,
 			'height': 5,
 			'font': self.fonts['pagesList']
 		})
@@ -230,4 +236,4 @@ class _View:
 
 
 
-VIEW = _View()
+ui = Ui()

@@ -1,4 +1,4 @@
-from view import *
+import view.VIEW as VIEW
 
 
-VIEW.show()
+VIEW.ui.show()

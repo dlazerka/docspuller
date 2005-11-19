@@ -9,6 +9,9 @@ Program Statuses:
 	active
 Page statuses:
 	queued
+	fetching...
+	failed
+	fetched
 	stored
 	parsed
 
