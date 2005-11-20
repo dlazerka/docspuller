@@ -23,6 +23,7 @@ class Ui:
 		self.bind()
 		self.refreshControls()
 		self.regExpTyping()
+		MODEL.siteDownloader.addActivityListener(self.refreshControls)
 		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.newPageOccured)
 
 		#self.actStart()
@@ -36,13 +37,13 @@ class Ui:
 
 
 	def newPageOccured(self, page):
-		page.addStatusListener(self.statusPageOccured)
+		page.addStatusListener(self.pageStatusChanged)
 
 		lineStart = self.widgets['pagesList'].index('End')
 
 		self.widgets['pagesList'].insert('End', page.url);
 		self.widgets['pagesList'].insert('End', '  ->  ');
-		self.widgets['pagesList'].insert('End', page.path);
+		self.widgets['pagesList'].insert('End', page.relPath);
 		self.widgets['pagesList'].insert('End', '    ');
 
 		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
@@ -60,7 +61,7 @@ class Ui:
 		#});
 
 
-	def statusPageOccured(self, page):
+	def pageStatusChanged(self, page):
 		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
 		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
 		#self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
@@ -88,17 +89,20 @@ class Ui:
 
 
 	def refreshControls(self):
-		if MODEL.siteDownloader.status == 'inactive':
-
-			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
-			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
-			self.widgets['entryLocalDir'].configure({'state': 'normal'})
-		else:
+		if MODEL.siteDownloader.isActive():
 			self.widgets['buttonControl'].configure({'text': 'Stop', 'command': self.actStop})
 			self.widgets['entryFirstUrl'].configure({'state': 'readonly'})
 			self.widgets['entryLocalDir'].configure({'state': 'readonly'})
+		else:
+			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
+			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
+			self.widgets['entryLocalDir'].configure({'state': 'normal'})
 
 		project = MODEL.siteDownloader.project
+		self.widgets['entryFirstUrl'].delete('0', 'end')
+		self.widgets['entryLocalDir'].delete('0', 'end')
+		self.widgets['entryRegExp'].delete('0', 'end')
+		self.widgets['entryTestUrl'].delete('0', 'end')
 		self.widgets['entryFirstUrl'].insert('0', 'http://localhost/common/sd.php')
 		self.widgets['entryLocalDir'].insert('0', project.settings['localDir'])
 		self.widgets['entryRegExp'].insert('0', project.settings['regExp'])

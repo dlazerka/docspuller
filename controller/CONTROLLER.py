@@ -11,9 +11,9 @@ def start(**args):
 
 	project.addUrl(args['firstUrl'])
 
-	MODEL.siteDownloader.status = 'active'
+	MODEL.siteDownloader.start()
 
 
 def stop(**args):
-	MODEL.siteDownloader.status = 'inactive'
+	MODEL.siteDownloader.stop()
 

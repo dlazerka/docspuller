@@ -1,32 +1,45 @@
-from SDStatus import *
-from Project import *
+from Project import Project
+import thread
 
 
 class SiteDownloader(object):
-	"""
-		__mainLoopThread
-		project
-		status
-	"""
-
-
 	def __init__(self):
 		self.project = Project()
+		self.__isActive = False
+		self.activityListeners = []
 
 
-	def activeCycle(self):
-		import thread
+	def isActive(self):
+		return self.__isActive
+
+
+	def start(self):
+		self.__isActive = True
+		self.notifyActivityListeners()
 		self.__mainLoopThread = thread.start_new_thread(self.__mainLoop, ())
 
 
+	def stop(self):
+		self.__isActive = False
+		self.notifyActivityListeners()
+
+
+	def addActivityListener(self, listener):
+		self.activityListeners.append(listener)
+
+	def notifyActivityListeners(self):
+		for listener in self.activityListeners:
+			listener()
+
+
 	def __mainLoop(self):
-		while self.status == 'active':
+		from PagesContainer import NoMorePages
+		while self.isActive():
 			try:
 				page = self.project.storeNextPage()
 			except NoMorePages:
-				self.status = 'inactive'
+				self.stop()
+			except Exception:
+				self.stop()
+				raise
 
-
-
-
-	status = SDStatus(activeCycle)

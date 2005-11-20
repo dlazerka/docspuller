@@ -1,5 +1,5 @@
-from PagesContainer import *
-from Page import *
+from PagesContainer import PagesContainer, NoMorePages
+from Page import Page
 
 
 class Project:
@@ -12,22 +12,26 @@ class Project:
 
 
 	def __init__(self):
-		self.settings['remoteDir'] = 'http://localhost/common'
-		self.settings['localDir'] = '/usr/work/@my/python/SiteDownloader'
+		self.settings['remoteDir'] = 'http://localhost/common/'
+		self.settings['localDir'] = '/usr/work/@my/python/SiteDownloader/!'
 		self.settings['regExp'] = '^.*$'
 		self.pagesContainer = PagesContainer()
 
 
-	def addUrl(self, url):
-		page = Page(url, self.settings)
+	def addUrl(self, url, parentPage = None):
+		page = Page(url, self.settings, parentPage)
 		self.pagesContainer.add(page)
 
 
 	def storeNextPage(self):
 		page = self.pagesContainer.popQueued()
+		
 		if page.fetchContents():
 			page.saveContents()
 			page.parse()
+		
+			import re
 			for link in page.links:
-				self.addUrl(link)
+				if not self.pagesContainer.containsUrl(link):
+					self.addUrl(link, page)
 

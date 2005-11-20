@@ -1,12 +1,12 @@
 ToDo:
-	> Parsing
-	* relative pathes in UI
-	* maybe Ui: Stop -> Pause
+	>f show urls which doesn't satisfy project's RegExp (maybe checkbox)
+	f numbering of pages
+	f step-by-step working (Stop -> Pause, project saving)
+	f relative pathes in UI
+	f bad characters in urls (and conflicted filenames)
+	ñ clarify PageStatus
 
 
-Program Statuses:
-	inactive
-	active
 Page statuses:
 	queued
 	fetching...

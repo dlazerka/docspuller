@@ -10,11 +10,11 @@ class Page(object):
 	"""
 
 
-	def __init__(self, url, settings):
+	def __init__(self, url, settings, parent = None):
 		self.__status = 'queued'
 		self.settings = settings
 		self.url = url
-		self.path = settings['localDir'] + url[len(settings['remoteDir']):]
+		self.relPath = url[len(settings['remoteDir']) + 1:]
 		self.statusListeners = []
 		self.links = []
 
@@ -42,55 +42,49 @@ class Page(object):
 
 	def fetchContents(self):
 		self.status = 'fetching...'
-		#print 'Page::fetchContents::self.url=%s' % self.url;
-		import urllib
-		urlOpener = urllib.URLopener()
 		try:
-			resource = urlOpener.open(self.url)
+			import urllib
+			resource = urllib.URLopener().open(self.url)
 		except IOError:
-			self.status = 'failed'
-			return False;
+			self.status = 'fetching failed'
+			return False
 		else:
 			self.contents = resource.read()
 			self.status = 'fetched'
 			return True
-		#print 'Page::fetchContents::len=%d' % len(self.contents);
 
 
 	def saveContents(self):
-		#print 'Page::saveContents::%s' % self.path;
+		import os
 
-		dstFile = file(self.path, 'wb')
-		dstFile.write(self.contents)
-		dstFile.close()
+		subdirs = self.relPath.split('/')[:-1]
+		cur = self.settings['localDir']
+		for subdir in subdirs:
+			cur = cur + '/' + subdir
+			if not os.path.exists(cur):
+				os.mkdir(cur)
 
-		self.status = 'saved'
+		path = '%s/%s' % (self.settings['localDir'], self.relPath)
+		try:
+			dstFile = file(path, 'wb')
+		except IOError:
+			self.status = 'saving failed'
+			raise
+		else:
+			dstFile.write(self.contents)
+			dstFile.close()
+			self.status = 'saved'
 
 
 	def parse(self):
 		import re
-		links = re.findall('(?:href|rel|src)="([^"]+)"', self.contents)
-		# http://localhost/common/sd.php
-		# //localhost/common/sd.php
-		# /common/sd.php
-		# sd.php
+		import urlparse
 
-		remoteDomain = re.match('http://([^/]+)', self.settings['remoteDir']).group(1)
-		for link in links:
-			groups = list(re.match('(http:)?(//[^/]+)?(/)?(.*)', link).groups())
-			if not groups[0]:
-				groups[0] = 'http:'
-			if not groups[1]:
-				groups[1] = '//' + remoteDomain
-			if not groups[2]:
-				groups[2] = '/'
+		for link in re.findall('(?:href|rel|src)="([^"]+?)"', self.contents):
+			link = urlparse.urljoin(self.url, link)
+			if link[0:len(self.settings['remoteDir'])] == self.settings['remoteDir']\
+				and re.search(self.settings['regExp'], link)\
+			:
+				self.links.append(link)
 
-			link = ''.join(groups)
-			#if \
-			#	link[0:len(self.settings['remoteDir'])] == self.settings['remoteDir']\
-			#	and re.search(self.settings['regExp'], link)\
-			#	and not
-			#:
-			#	self.links.append(link)
-
-		return self.links
+		self.status = 'parsed'
