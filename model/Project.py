@@ -2,7 +2,7 @@ from PagesContainer import PagesContainer, NoMorePages
 from Page import Page
 
 
-class Project:
+class Project(object):
 	settings = {
 		'remoteDir': None,
 		'localDir': None,
@@ -14,8 +14,14 @@ class Project:
 	def __init__(self):
 		self.settings['remoteDir'] = 'http://localhost/common/'
 		self.settings['localDir'] = '/usr/work/@my/python/SiteDownloader/!'
-		self.settings['regExp'] = '^.*$'
+		self.settings['regExp'] = '^[^_]*$'
 		self.pagesContainer = PagesContainer()
+
+
+	def getPages(self):
+		return self.pagesContainer.pages
+
+	pages = property(getPages)
 
 
 	def addUrl(self, url, parentPage = None):
@@ -25,11 +31,11 @@ class Project:
 
 	def storeNextPage(self):
 		page = self.pagesContainer.popQueued()
-		
+
 		if page.fetchContents():
 			page.saveContents()
 			page.parse()
-		
+
 			import re
 			for link in page.links:
 				if not self.pagesContainer.containsUrl(link):

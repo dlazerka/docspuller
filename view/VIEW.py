@@ -8,11 +8,6 @@ import model.MODEL as MODEL
 
 
 class Ui:
-	widgets = None
-	fonts = None
-	tk = None
-
-
 	def show(self):
 		self.widgets = dict()
 		self.fonts = dict()
@@ -24,7 +19,7 @@ class Ui:
 		self.refreshControls()
 		self.regExpTyping()
 		MODEL.siteDownloader.addActivityListener(self.refreshControls)
-		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.newPageOccured)
+		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
 
 		#self.actStart()
 
@@ -36,42 +31,10 @@ class Ui:
 		self.widgets['mainFrame'].quit()
 
 
-	def newPageOccured(self, page):
-		page.addStatusListener(self.pageStatusChanged)
-
-		lineStart = self.widgets['pagesList'].index('End')
-
-		self.widgets['pagesList'].insert('End', page.url);
-		self.widgets['pagesList'].insert('End', '  ->  ');
-		self.widgets['pagesList'].insert('End', page.relPath);
-		self.widgets['pagesList'].insert('End', '    ');
-
-		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
-		self.widgets['pagesList'].mark_gravity('Page%sStatusStart' % id(page), 'left')
-		self.widgets['pagesList'].insert('End', page.status);
-		self.widgets['pagesList'].mark_set('Page%sStatusEnd' % id(page), 'End')
-		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'left')
-		self.widgets['pagesList'].insert('End', '\n');
-		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'right')
-
-
-		self.widgets['pagesList'].tag_add('Page%s' % id(page), lineStart, 'End');
-		#self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
-		#	'background': '#ffeeee',
-		#});
-
-
-	def pageStatusChanged(self, page):
-		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
-		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
-		#self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
-		#	'background': '#eeffee'
-		#});
-
-
 	def bind(self):
 		# Binds
 		self.widgets['mainFrame'].master.bind('<Escape>', self.quit)
+		self.widgets['checkbuttonShowAllPages'].configure({'command': self.refreshPagesList})
 		self.widgets['buttonQuit'].configure({'command': self.quit})
 		self.widgets['buttonControl'].configure({'command': self.actStart})
 		self.widgets['entryRegExp'].bind('<KeyRelease>', self.regExpTyping)
@@ -81,6 +44,7 @@ class Ui:
 		localDir = self.widgets['entryLocalDir'].get()
 		firstUrl = self.widgets['entryFirstUrl'].get()
 		regExp = self.widgets['entryRegExp'].get()
+		self.refreshControls()
 		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
 
 
@@ -109,18 +73,46 @@ class Ui:
 		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
 
 
-	def refreshPage(self, page):
-		if page in self.widgets['mainFrame'].pagesListed:
-			line = self.widgets['mainFrame'].pagesListed.index(page) + 1
-			self.widgets['mainFrame'].pagesList.delete('%d.0' % line, '%d.end' % line)
-		else:
-			self.widgets['mainFrame'].pagesListed.append(page)
-			line = len(self.widgets['mainFrame'].pagesListed)
+	def addPage(self, page):
+		if page.status == 'failed regexp' and not self.widgets['checkbuttonShowAllPages'].isSelected.get():
+			return
 
-		self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '%s    %s' % (page.url, page.status))
-		if page.path:
-			self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '    %s' % (page.path))
-		self.widgets['mainFrame'].pagesList.insert('%d.end' % line, '\n')
+		page.addStatusListener(self.pageStatusChanged)
+
+		lineStart = self.widgets['pagesList'].index('End')
+
+		self.widgets['pagesList'].insert('End', page.url);
+		self.widgets['pagesList'].insert('End', '  ->  ');
+		self.widgets['pagesList'].insert('End', page.relPath);
+		self.widgets['pagesList'].insert('End', '    ');
+
+		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
+		self.widgets['pagesList'].mark_gravity('Page%sStatusStart' % id(page), 'left')
+		self.widgets['pagesList'].insert('End', page.status);
+		self.widgets['pagesList'].mark_set('Page%sStatusEnd' % id(page), 'End')
+		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'left')
+		self.widgets['pagesList'].insert('End', '\n');
+		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'right')
+
+
+		self.widgets['pagesList'].tag_add('Page%s' % id(page), lineStart, 'End');
+
+		if page.status == 'failed regexp':
+			self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
+				'background': '#eeeeee',
+			});
+
+
+	def pageStatusChanged(self, page):
+		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
+		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
+
+
+	def refreshPagesList(self):
+		self.widgets['pagesList'].delete('1.0', 'End')
+		for page in MODEL.siteDownloader.project.pages:
+			self.addPage(page)
+
 
 
 	def regExpTyping(self, *args):
@@ -148,8 +140,9 @@ class Ui:
 		self.widgets['mainFrame'] = Frame(self.tk)
 
 		self.widgets['frameParams'] = Frame(self.widgets['mainFrame'])
+		self.widgets['frameCheckboxes'] = Frame(self.widgets['mainFrame'])
 		self.widgets['frameButtons'] = Frame(self.widgets['mainFrame'], {
-			'cursor': 'hand2'
+			'cursor': 'hand2',
 		})
 
 		self.widgets['frameFirstUrl'] = Frame(self.widgets['frameParams'])
@@ -183,6 +176,16 @@ class Ui:
 		self.widgets['entryRegExp'] = Entry(self.widgets['frameRegExp'])
 		self.widgets['entryTestUrl'] = Entry(self.widgets['frameTestUrl'])
 
+		self.widgets['checkbuttonShowAllPages'] = Checkbutton(self.widgets['frameCheckboxes'], {
+			'text': 'Show All Pages',
+			'pady': 3,
+			'cursor': 'hand2',
+		})
+		self.widgets['checkbuttonShowAllPages'].isSelected = IntVar()
+		self.widgets['checkbuttonShowAllPages'].configure({
+			'variable': self.widgets['checkbuttonShowAllPages'].isSelected,
+		})
+
 		self.widgets['buttonQuit'] = Button(self.widgets['frameButtons'], {
 			'text': 'Quit',
 			'width': 8
@@ -198,7 +201,7 @@ class Ui:
 		)
 		self.widgets['pagesList'] = Text(self.widgets['mainFrame'], {
 			'width': 100,
-			'height': 5,
+			'height': 20,
 			'font': self.fonts['pagesList']
 		})
 		self.widgets['pagesList'].mark_set('End', '1.end')
@@ -209,15 +212,15 @@ class Ui:
 		# Pack level 0
 		self.widgets['mainFrame'].pack({'fill': 'both', 'expand': 'yes'});
 
+
 		# Pack level 1
 		self.widgets['pagesList'].pack({'side': 'bottom', 'fill': 'both', 'expand': 'yes'})
 		self.widgets['frameParams'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
+		self.widgets['frameCheckboxes'].pack({'side': 'left', 'fill': 'y'})
 		self.widgets['frameButtons'].pack({'side': 'left', 'fill': 'y'})
 
-		# Pack level 2
-		self.widgets['buttonQuit'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
-		self.widgets['buttonControl'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
 
+		# Pack level 2
 		self.widgets['frameFirstUrl'].pack({'side': 'top', 'fill': 'x'})
 		self.widgets['labelFirstUrl'].pack({'side': 'left'})
 		self.widgets['entryFirstUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})
@@ -238,6 +241,10 @@ class Ui:
 		self.widgets['labelTestResultLabel'].pack({'side': 'left'})
 		self.widgets['labelTestResult'].pack({'side': 'left'})
 
+		self.widgets['checkbuttonShowAllPages'].pack({'side': 'top'})
+
+		self.widgets['buttonQuit'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
+		self.widgets['buttonControl'].pack({'side': 'top', 'fill':'y', 'expand': 'yes'});
 
 
 ui = Ui()

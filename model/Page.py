@@ -1,3 +1,6 @@
+import re
+
+
 class Page(object):
 	"""
 	__status
@@ -11,12 +14,16 @@ class Page(object):
 
 
 	def __init__(self, url, settings, parent = None):
-		self.__status = 'queued'
 		self.settings = settings
 		self.url = url
 		self.relPath = url[len(settings['remoteDir']) + 1:]
 		self.statusListeners = []
 		self.links = []
+
+		if re.search(self.settings['regExp'], url):
+			self.__status = 'queued'
+		else:
+			self.__status = 'failed regexp'
 
 
 	def getStatus(self):
@@ -82,9 +89,7 @@ class Page(object):
 
 		for link in re.findall('(?:href|rel|src)="([^"]+?)"', self.contents):
 			link = urlparse.urljoin(self.url, link)
-			if link[0:len(self.settings['remoteDir'])] == self.settings['remoteDir']\
-				and re.search(self.settings['regExp'], link)\
-			:
+			if link[0:len(self.settings['remoteDir'])] == self.settings['remoteDir']:
 				self.links.append(link)
 
 		self.status = 'parsed'

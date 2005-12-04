@@ -1,16 +1,18 @@
 ToDo:
-	>f show urls which doesn't satisfy project's RegExp (maybe checkbox)
 	f numbering of pages
-	f step-by-step working (Stop -> Pause, project saving)
+	f step-by-step working (Stop -> Pause, project saving, def_project.ini)
 	f relative pathes in UI
 	f bad characters in urls (and conflicted filenames)
+	f validating project settings
 	ñ clarify PageStatus
+	
 
 
 Page statuses:
+	failed regexp
 	queued
 	fetching...
-	failed
+	fetching failed
 	fetched
 	stored
 	parsed
