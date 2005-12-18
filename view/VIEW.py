@@ -13,6 +13,7 @@ class Ui:
 		self.fonts = dict()
 		self.pagesShown = []
 		self.tk = Tk()
+		self.firstUrl = 'http://localhost/common/tutorial/httpscripting.html'
 
 		self.createWidgets()
 		self.bind()
@@ -42,10 +43,10 @@ class Ui:
 
 	def actStart(self):
 		localDir = self.widgets['entryLocalDir'].get()
-		firstUrl = self.widgets['entryFirstUrl'].get()
+		self.firstUrl = self.widgets['entryFirstUrl'].get()
 		regExp = self.widgets['entryRegExp'].get()
-		self.refreshControls()
-		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
+		CONTROLLER.start(localDir = localDir, firstUrl = self.firstUrl, regExp = regExp)
+		#self.refreshControls()
 
 
 	def actStop(self):
@@ -67,7 +68,7 @@ class Ui:
 		self.widgets['entryLocalDir'].delete('0', 'end')
 		self.widgets['entryRegExp'].delete('0', 'end')
 		self.widgets['entryTestUrl'].delete('0', 'end')
-		self.widgets['entryFirstUrl'].insert('0', 'http://localhost/common/sd.php')
+		self.widgets['entryFirstUrl'].insert('0', self.firstUrl)
 		self.widgets['entryLocalDir'].insert('0', project.settings['localDir'])
 		self.widgets['entryRegExp'].insert('0', project.settings['regExp'])
 		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
@@ -81,6 +82,9 @@ class Ui:
 
 		lineStart = self.widgets['pagesList'].index('End')
 
+		self.widgets['pagesList'].insert('End', '%s ' % page.id);
+		if page.parent:
+			self.widgets['pagesList'].insert('End', '%s ' % page.parent.id);
 		self.widgets['pagesList'].insert('End', page.url);
 		self.widgets['pagesList'].insert('End', '  ->  ');
 		self.widgets['pagesList'].insert('End', page.relPath);
@@ -109,9 +113,14 @@ class Ui:
 
 
 	def refreshPagesList(self):
-		self.widgets['pagesList'].delete('1.0', 'End')
+		self.clearPages()
 		for page in MODEL.siteDownloader.project.pages:
 			self.addPage(page)
+
+
+	def clearPages(self):
+		self.widgets['pagesList'].delete('1.0', 'End')
+		self.pagesCnt = 0
 
 
 

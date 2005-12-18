@@ -2,20 +2,10 @@ import re
 
 
 class Page(object):
-	"""
-	__status
-	url
-	settings
-	path
-	contents
-	statusListeners
-	links
-	"""
-
-
 	def __init__(self, url, settings, parent = None):
-		self.settings = settings
 		self.url = url
+		self.settings = settings
+		self.parent = parent
 		self.relPath = url[len(settings['remoteDir']) + 1:]
 		self.statusListeners = []
 		self.links = []

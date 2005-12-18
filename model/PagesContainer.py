@@ -16,11 +16,9 @@ class PagesContainer:
 
 
 	def add(self, page):
-		if len(self.pages) > 5:
-			return False;
-
-		self.pages.append(page)
 		self.urls[page.url] = True
+		self.pages.append(page)
+		page.id = self.pages.index(page)
 
 		if page.status == 'queued':
 			self.queued.append(page)

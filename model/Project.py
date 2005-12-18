@@ -12,9 +12,9 @@ class Project(object):
 
 
 	def __init__(self):
-		self.settings['remoteDir'] = 'http://localhost/common/'
+		self.settings['remoteDir'] = 'http://localhost/common'
 		self.settings['localDir'] = '/usr/work/@my/python/SiteDownloader/!'
-		self.settings['regExp'] = '^[^_]*$'
+		self.settings['regExp'] = '^.*$'
 		self.pagesContainer = PagesContainer()
 
 
