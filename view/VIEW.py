@@ -85,8 +85,8 @@ class Ui:
 		self.widgets['pagesList'].insert('End', '%s ' % page.id);
 		if page.parent:
 			self.widgets['pagesList'].insert('End', '%s ' % page.parent.id);
-		self.widgets['pagesList'].insert('End', page.url);
-		self.widgets['pagesList'].insert('End', '  ->  ');
+		#self.widgets['pagesList'].insert('End', page.url);
+		#self.widgets['pagesList'].insert('End', '  ->  ');
 		self.widgets['pagesList'].insert('End', page.relPath);
 		self.widgets['pagesList'].insert('End', '    ');
 
