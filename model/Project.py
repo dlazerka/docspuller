@@ -3,41 +3,47 @@ from Page import Page
 
 
 class Project(object):
-	settings = {
-		'remoteDir': None,
-		'localDir': None,
-		'regExp': None,
-	}
-	pagesContainer = None
-
-
-	def __init__(self):
-		self.settings['remoteDir'] = 'http://localhost/common'
-		self.settings['localDir'] = '/usr/work/@my/python/SiteDownloader/!'
-		self.settings['regExp'] = '^.*$'
+	def __init__(self, cfgFileName, isDefault = False):
+		self.cfgFileName = cfgFileName
+		self.isDefault = isDefault
 		self.pagesContainer = PagesContainer()
 
 
-	def getPages(self):
-		return self.pagesContainer.pages
+	def readCfg(self):
+		import xml.dom.minidom as minidom
+		cfgNode = minidom.parse(self.cfgFileName).getElementsByTagName('cfg')[0]
 
-	pages = property(getPages)
+
+		self.cfg = {}
+		self.cfg['name'] = cfgNode.getElementsByTagName('name')[0].childNodes[0].data
+		self.cfg['firstUrl'] = cfgNode.getElementsByTagName('firstUrl')[0].childNodes[0].data
+		self.cfg['remoteDir'] = cfgNode.getElementsByTagName('remoteDir')[0].childNodes[0].data
+		self.cfg['localDir'] = cfgNode.getElementsByTagName('localDir')[0].childNodes[0].data
+		self.cfg['regExp'] = cfgNode.getElementsByTagName('regExp')[0].childNodes[0].data
+
+
+	def setCfg(self, **args):
+		import re
+
+		for argName in args:
+			self.cfg[argName] = args[argName]
+		if 'firstUrl' in args:
+			if 'remoteDir' not in args:
+				self.cfg['remoteDir'] = re.sub('/[^/]*$', '', args['firstUrl'])
+			self.addUrl(args['firstUrl'])
 
 
 	def addUrl(self, url, parentPage = None):
-		page = Page(url, self.settings, parentPage)
-		self.pagesContainer.add(page)
+		if not self.pagesContainer.containsUrl(url):
+			page = Page(url, self.cfg, parentPage)
+			self.pagesContainer.add(page)
 
 
 	def storeNextPage(self):
 		page = self.pagesContainer.popQueued()
-
 		if page.fetchContents():
 			page.saveContents()
 			page.parse()
-
-			import re
 			for link in page.links:
-				if not self.pagesContainer.containsUrl(link):
-					self.addUrl(link, page)
+				self.addUrl(link, page)
 

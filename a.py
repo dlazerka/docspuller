@@ -1,4 +1,5 @@
-#from model.Project import Project, Error as lError
+import os.path
+a = {'ku': 'asd'}
+for i in a:
+	print i
 
-a = '/common/a/sd.php'
-print a.split('/')

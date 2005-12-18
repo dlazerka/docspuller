@@ -4,12 +4,11 @@ import model.MODEL as MODEL
 def start(**args):
 	project = MODEL.siteDownloader.project
 
-	import re
-	project.settings['remoteDir'] = re.sub('/[^/]*$', '', args['firstUrl'])
-	project.settings['localDir'] = args['localDir']
-	project.settings['regExp'] = args['regExp']
-
-	project.addUrl(args['firstUrl'])
+	project.setCfg(
+		firstUrl = args['firstUrl'],
+		localDir = args['localDir'],
+		regExp = args['regExp'],
+	)
 
 	MODEL.siteDownloader.start()
 

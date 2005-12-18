@@ -69,8 +69,8 @@ class Ui:
 		self.widgets['entryRegExp'].delete('0', 'end')
 		self.widgets['entryTestUrl'].delete('0', 'end')
 		self.widgets['entryFirstUrl'].insert('0', self.firstUrl)
-		self.widgets['entryLocalDir'].insert('0', project.settings['localDir'])
-		self.widgets['entryRegExp'].insert('0', project.settings['regExp'])
+		self.widgets['entryLocalDir'].insert('0', project.cfg['localDir'])
+		self.widgets['entryRegExp'].insert('0', project.cfg['regExp'])
 		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
 
 
@@ -85,8 +85,6 @@ class Ui:
 		self.widgets['pagesList'].insert('End', '%s ' % page.id);
 		if page.parent:
 			self.widgets['pagesList'].insert('End', '%s ' % page.parent.id);
-		#self.widgets['pagesList'].insert('End', page.url);
-		#self.widgets['pagesList'].insert('End', '  ->  ');
 		self.widgets['pagesList'].insert('End', page.relPath);
 		self.widgets['pagesList'].insert('End', '    ');
 

@@ -4,9 +4,39 @@ import thread
 
 class SiteDownloader(object):
 	def __init__(self):
-		self.project = Project()
+		self.readCfg()
+		self.project = self.defProject
+		self.project.readCfg()
 		self.__isActive = False
 		self.activityListeners = []
+
+
+	def readCfg(self):
+		import os.path
+		import xml.dom.minidom as minidom
+
+		cfgFileName = os.path.dirname(__file__) + '/../SiteDownloader.cfg.xml'
+
+		cfgNode = minidom.parse(cfgFileName).getElementsByTagName('cfg')[0]
+		projectsNode = cfgNode.getElementsByTagName('projects')[0]
+		projectNodes = projectsNode.getElementsByTagName('project')
+
+		self.projects = []
+		self.defProject = None
+		for projectNode in projectNodes:
+			projectCfgFileName = projectNode.getElementsByTagName('cfgFileName')[0].childNodes[0].data
+			projectCfgFileName = os.path.join(os.path.dirname(cfgFileName), projectCfgFileName)
+
+			project = Project(
+				cfgFileName = projectCfgFileName,
+				isDefault = projectNode.getElementsByTagName('isDefault').length == 1,
+			)
+			self.projects.append(project)
+			if project.isDefault:
+				self.defProject = project
+
+		if not self.defProject:
+			self.defProject = self.projects[0]
 
 
 	def isActive(self):
@@ -33,10 +63,10 @@ class SiteDownloader(object):
 
 
 	def __mainLoop(self):
-		from PagesContainer import NoMorePages
+		from Project import NoMorePages
 		while self.isActive():
 			try:
-				page = self.project.storeNextPage()
+				self.project.storeNextPage()
 			except NoMorePages:
 				self.stop()
 			except Exception:
