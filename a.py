@@ -1,5 +1,4 @@
 import os.path
-a = {'ku': 'asd'}
-for i in a:
-	print i
+a = ['ku']
+print list(a.__class__.__dict__)
 

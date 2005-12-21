@@ -4,7 +4,6 @@ import re
 
 import controller.CONTROLLER as CONTROLLER
 import model.MODEL as MODEL
-#from model.Status import Status
 
 
 class Ui:
@@ -13,39 +12,56 @@ class Ui:
 		self.fonts = dict()
 		self.pagesShown = []
 		self.tk = Tk()
-		self.firstUrl = 'http://localhost/common/tutorial/httpscripting.html'
 
 		self.createWidgets()
 		self.bind()
 		self.refreshControls()
 		self.regExpTyping()
-		MODEL.siteDownloader.addActivityListener(self.refreshControls)
-		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
 
 		#self.actStart()
 
 		Frame.mainloop(self.widgets['mainFrame'])
 
 
-
-	def quit(self, *args):
-		self.widgets['mainFrame'].quit()
-
-
 	def bind(self):
 		# Binds
-		self.widgets['mainFrame'].master.bind('<Escape>', self.quit)
+		def quit(*args):
+			self.tk.quit()
+		
+		self.tk.bind('<Escape>', quit)
+		self.widgets['buttonProjectPrev'].configure({'command': CONTROLLER.toPrevProject})
+		self.widgets['buttonProjectNext'].configure({'command': CONTROLLER.toNextProject})
+		self.widgets['buttonProjectSave'].configure({'command': self.saveProject})
 		self.widgets['checkbuttonShowAllPages'].configure({'command': self.refreshPagesList})
-		self.widgets['buttonQuit'].configure({'command': self.quit})
+		self.widgets['buttonQuit'].configure({'command': quit})
 		self.widgets['buttonControl'].configure({'command': self.actStart})
 		self.widgets['entryRegExp'].bind('<KeyRelease>', self.regExpTyping)
+		
+		MODEL.siteDownloader.addActivityListener(self.refreshControls)
+		MODEL.siteDownloader.addProjectListener(self.projectChanged)
+		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
+		
+		
+	def saveProject(self):
+		name = self.widgets['entryProject'].get()
+		localDir = self.widgets['entryLocalDir'].get()
+		firstUrl = self.widgets['entryFirstUrl'].get()
+		regExp = self.widgets['entryRegExp'].get()
+		CONTROLLER.saveProject(name = name, localDir = localDir, firstUrl = firstUrl, regExp = regExp)
+
+
+	def projectChanged(self):
+		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
+		self.refreshControls()
+		self.refreshPagesList()
+			
 
 
 	def actStart(self):
 		localDir = self.widgets['entryLocalDir'].get()
-		self.firstUrl = self.widgets['entryFirstUrl'].get()
+		firstUrl = self.widgets['entryFirstUrl'].get()
 		regExp = self.widgets['entryRegExp'].get()
-		CONTROLLER.start(localDir = localDir, firstUrl = self.firstUrl, regExp = regExp)
+		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
 		#self.refreshControls()
 
 
@@ -62,13 +78,25 @@ class Ui:
 			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
 			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
 			self.widgets['entryLocalDir'].configure({'state': 'normal'})
-
+			
 		project = MODEL.siteDownloader.project
+		isFirst = MODEL.siteDownloader.projects.index(project) == 0
+		isLast = MODEL.siteDownloader.projects.index(project) + 1 == len(MODEL.siteDownloader.projects)
+		if isFirst:
+			self.widgets['buttonProjectPrev'].configure({'state': 'disabled'})
+		else:
+			self.widgets['buttonProjectPrev'].configure({'state': 'normal'})
+		if isLast:
+			self.widgets['buttonProjectNext'].configure({'state': 'disabled'})
+		else:
+			self.widgets['buttonProjectNext'].configure({'state': 'normal'})
+		self.widgets['entryProject'].delete('0', 'end')
 		self.widgets['entryFirstUrl'].delete('0', 'end')
 		self.widgets['entryLocalDir'].delete('0', 'end')
 		self.widgets['entryRegExp'].delete('0', 'end')
 		self.widgets['entryTestUrl'].delete('0', 'end')
-		self.widgets['entryFirstUrl'].insert('0', self.firstUrl)
+		self.widgets['entryProject'].insert('0', project.cfg['name'])
+		self.widgets['entryFirstUrl'].insert('0', project.cfg['firstUrl'])
 		self.widgets['entryLocalDir'].insert('0', project.cfg['localDir'])
 		self.widgets['entryRegExp'].insert('0', project.cfg['regExp'])
 		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
@@ -112,7 +140,7 @@ class Ui:
 
 	def refreshPagesList(self):
 		self.clearPages()
-		for page in MODEL.siteDownloader.project.pages:
+		for page in MODEL.siteDownloader.project.pagesContainer.pages:
 			self.addPage(page)
 
 
@@ -152,6 +180,7 @@ class Ui:
 			'cursor': 'hand2',
 		})
 
+		self.widgets['frameProject'] = Frame(self.widgets['frameParams'])
 		self.widgets['frameFirstUrl'] = Frame(self.widgets['frameParams'])
 		self.widgets['frameLocalDir'] = Frame(self.widgets['frameParams'])
 		self.widgets['frameRegExp'] = Frame(self.widgets['frameParams'])
@@ -160,6 +189,22 @@ class Ui:
 
 
 		# Create widgets
+		self.widgets['buttonProjectPrev'] = Button(self.widgets['frameProject'], {
+			'text': ' < '
+		})
+		self.widgets['entryProject'] = Entry(self.widgets['frameProject'], {
+			'justify': 'center',
+		})
+		self.widgets['buttonProjectNext'] = Button(self.widgets['frameProject'], {
+			'text': ' > '
+		})
+		self.widgets['buttonProjectSave'] = Button(self.widgets['frameProject'], {
+			'text': 'Save',
+			'padx': '4',
+		})
+		self.widgets['buttonProjectReset'] = Button(self.widgets['frameProject'], {
+			'text': 'Reset'
+		})
 		self.widgets['labelFirstUrl'] = Label(self.widgets['frameFirstUrl'], {
 			'text': 'First Url: '
 		})
@@ -228,6 +273,19 @@ class Ui:
 
 
 		# Pack level 2
+		self.widgets['frameProject'].pack({'side': 'top', 'fill': 'x'})
+		self.widgets['buttonProjectPrev'].pack({'side': 'left', 'fill': 'x'})
+		self.widgets['entryProject'].pack({'side': 'left', 'fill': 'x',
+			'expand': 'yes',
+		})
+		self.widgets['buttonProjectNext'].pack({'side': 'left', 'fill': 'x'})
+		self.widgets['buttonProjectSave'].pack({'side': 'left', 'fill': 'x',
+			'expand': 'yes', 'padx': '5 0',
+		})
+		self.widgets['buttonProjectReset'].pack({'side': 'left', 'fill': 'x',
+			'expand': 'yes', 'padx': '5 0',
+		})
+		
 		self.widgets['frameFirstUrl'].pack({'side': 'top', 'fill': 'x'})
 		self.widgets['labelFirstUrl'].pack({'side': 'left'})
 		self.widgets['entryFirstUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})

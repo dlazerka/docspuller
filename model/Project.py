@@ -3,16 +3,16 @@ from Page import Page
 
 
 class Project(object):
-	def __init__(self, cfgFileName, isDefault = False):
-		self.cfgFileName = cfgFileName
+	def __init__(self, name, isDefault = False):
+		self.cfg = {}
+		self.cfg['name'] = name
 		self.isDefault = isDefault
 		self.pagesContainer = PagesContainer()
 
 
-	def readCfg(self):
+	def readCfg(self, cfgFileName):
 		import xml.dom.minidom as minidom
-		cfgNode = minidom.parse(self.cfgFileName).getElementsByTagName('cfg')[0]
-
+		cfgNode = minidom.parse(cfgFileName).getElementsByTagName('cfg')[0]
 
 		self.cfg = {}
 		self.cfg['name'] = cfgNode.getElementsByTagName('name')[0].childNodes[0].data
@@ -22,15 +22,29 @@ class Project(object):
 		self.cfg['regExp'] = cfgNode.getElementsByTagName('regExp')[0].childNodes[0].data
 
 
-	def setCfg(self, **args):
-		import re
+	def saveCfg(self, cfgFileName):
+		pass
 
-		for argName in args:
-			self.cfg[argName] = args[argName]
-		if 'firstUrl' in args:
-			if 'remoteDir' not in args:
-				self.cfg['remoteDir'] = re.sub('/[^/]*$', '', args['firstUrl'])
-			self.addUrl(args['firstUrl'])
+
+	def setCfg(self,
+		name = None,
+		firstUrl = None,
+		localDir = None,
+		remoteDir = None,
+		regExp = None,
+	):
+		import re
+		if name:
+			self.cfg['name'] = name
+		if firstUrl:
+			self.cfg['firstUrl'] = firstUrl
+			if not remoteDir:
+				self.cfg['remoteDir'] = re.sub('/[^/]*$', '', firstUrl)
+			self.addUrl(firstUrl)
+		if localDir:
+			self.localDir = localDir
+		if regExp:
+			self.regExp = regExp
 
 
 	def addUrl(self, url, parentPage = None):

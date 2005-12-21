@@ -1,5 +1,6 @@
 ToDo:
 	f cfg saving
+	f VIEW: pagesList's scrollbar
 	f step-by-step working (Stop -> Pause)
 	f bad characters in urls (and conflicted filenames)
 	f validating project settings
