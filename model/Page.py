@@ -1,16 +1,17 @@
 import re
 
+import Listened
+
 
 class Page(object):
-	def __init__(self, url, cfg, parent = None):
+	def __init__(self, url, projectCfg, parent = None):
 		self.url = url
-		self.cfg = cfg
+		self.projectCfg = projectCfg
 		self.parent = parent
-		self.relPath = url[len(cfg['remoteDir']) + 1:]
-		self.statusListeners = []
+		self.relPath = url[len(projectCfg.remoteDir) + 1:]
 		self.links = []
 
-		if re.search(self.cfg['regExp'], url):
+		if re.search(self.projectCfg.regExp, url):
 			self.__status = 'queued'
 		else:
 			self.__status = 'failed regexp'
@@ -22,19 +23,14 @@ class Page(object):
 
 	def setStatus(self, value):
 		self.__status = value
-		self.notifyStatusListeners()
+		self.notifyStatusListeners(self)
 
 
 	status = property(getStatus, setStatus)
 
 
-	def addStatusListener(self, statusListener):
-		self.statusListeners.append(statusListener)
-
-
-	def notifyStatusListeners(self):
-		for statusListener in self.statusListeners:
-			statusListener(self)
+	addStatusListener = Listened.getAddListenerMethod('status')
+	notifyStatusListeners = Listened.getNotifyListenersMethod('status')
 
 
 	def fetchContents(self):
@@ -55,13 +51,13 @@ class Page(object):
 		import os
 
 		subdirs = self.relPath.split('/')[:-1]
-		cur = self.cfg['localDir']
+		cur = self.projectCfg.localDir
 		for subdir in subdirs:
 			cur = cur + '/' + subdir
 			if not os.path.exists(cur):
 				os.mkdir(cur)
 
-		path = '%s/%s' % (self.cfg['localDir'], self.relPath)
+		path = '%s/%s' % (self.projectCfg.localDir, self.relPath)
 		try:
 			dstFile = file(path, 'wb')
 		except IOError:
@@ -79,7 +75,7 @@ class Page(object):
 
 		for link in re.findall('(?:href|rel|src)="([^"]+?)"', self.contents):
 			link = urlparse.urljoin(self.url, link)
-			if link[0:len(self.cfg['remoteDir'])] == self.cfg['remoteDir']:
+			if link[0:len(self.projectCfg.remoteDir)] == self.projectCfg.remoteDir:
 				self.links.append(link)
 
 		self.status = 'parsed'

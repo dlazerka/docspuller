@@ -1,3 +1,6 @@
+import Listened
+
+
 class NoMorePages(Exception):
 	pass
 
@@ -5,14 +8,12 @@ class NoMorePages(Exception):
 class PagesContainer:
 	pages = None
 	queued = None
-	newPageListeners = None
 
 
 	def __init__(self):
 		self.pages = []
 		self.queued = []
 		self.urls = {}
-		self.newPageListeners = []
 
 
 	def add(self, page):
@@ -37,10 +38,5 @@ class PagesContainer:
 		return self.urls.has_key(url)
 
 
-	def addNewPageListener(self, newPageListener):
-		self.newPageListeners.append(newPageListener);
-
-
-	def notifyNewPageListeners(self, page):
-		for newPageListener in self.newPageListeners:
-			newPageListener(page)
+	addNewPageListener = Listened.getAddListenerMethod('newPage')
+	notifyNewPageListeners = Listened.getNotifyListenersMethod('newPage')

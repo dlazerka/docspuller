@@ -47,7 +47,12 @@ class Ui:
 		localDir = self.widgets['entryLocalDir'].get()
 		firstUrl = self.widgets['entryFirstUrl'].get()
 		regExp = self.widgets['entryRegExp'].get()
-		CONTROLLER.saveProject(name = name, localDir = localDir, firstUrl = firstUrl, regExp = regExp)
+		CONTROLLER.saveProject(
+			name = name,
+			localDir = localDir,
+			firstUrl = firstUrl,
+			regExp = regExp
+		)
 
 
 	def projectChanged(self):
@@ -99,10 +104,10 @@ class Ui:
 		self.widgets['entryLocalDir'].delete('0', 'end')
 		self.widgets['entryRegExp'].delete('0', 'end')
 		self.widgets['entryTestUrl'].delete('0', 'end')
-		self.widgets['entryProject'].insert('0', project.cfg['name'])
-		self.widgets['entryFirstUrl'].insert('0', project.cfg['firstUrl'])
-		self.widgets['entryLocalDir'].insert('0', project.cfg['localDir'])
-		self.widgets['entryRegExp'].insert('0', project.cfg['regExp'])
+		self.widgets['entryProject'].insert('0', project.cfg.name)
+		self.widgets['entryFirstUrl'].insert('0', project.cfg.firstUrl)
+		self.widgets['entryLocalDir'].insert('0', project.cfg.localDir)
+		self.widgets['entryRegExp'].insert('0', project.cfg.regExp)
 		self.widgets['entryTestUrl'].insert('0', self.widgets['entryFirstUrl'].get())
 
 

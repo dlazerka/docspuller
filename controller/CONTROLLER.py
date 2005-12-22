@@ -4,7 +4,7 @@ import model.MODEL as MODEL
 def start(firstUrl, localDir, regExp):
 	project = MODEL.siteDownloader.project
 
-	project.setCfg(
+	project.cfg.set(
 		firstUrl = firstUrl,
 		localDir = localDir,
 		regExp = regExp,
@@ -13,14 +13,14 @@ def start(firstUrl, localDir, regExp):
 	MODEL.siteDownloader.start()
 
 
-def saveProject(self, name, firstUrl, localDir, regExp):
-	MODEL.siteDownloader.project.setCfg(
+def saveProject(name, firstUrl, localDir, regExp):
+	MODEL.siteDownloader.project.cfg.set(
 		name = name,
 		firstUrl = firstUrl,
 		localDir = localDir,
 		regExp = regExp,
 	)
-	MODEL.siteDownloader.project.save()
+	MODEL.siteDownloader.project.cfg.save()
 
 
 def toPrevProject(**args):
@@ -33,4 +33,4 @@ def toNextProject(**args):
 
 def __toProject(shift):
 	curNum = MODEL.siteDownloader.projects.index(MODEL.siteDownloader.project)
-	MODEL.siteDownloader.setProject(MODEL.siteDownloader.projects[curNum + shift])
+	MODEL.siteDownloader.setActiveProject(MODEL.siteDownloader.projects[curNum + shift])

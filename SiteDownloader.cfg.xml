@@ -4,11 +4,11 @@
 		<project>
 			<isDefault />
 			<name>sd.php</name>
-			<cfgFileName>./!/sd/project.cfg.xml</cfgFileName>
+			<cfgFilePath>./!/sd/project.cfg.xml</cfgFilePath>
 		</project>
 		<project>
 			<name>Curl tutorial</name>
-			<cfgFileName>./!/curl/project.cfg.xml</cfgFileName>
+			<cfgFilePath>./!/curl/project.cfg.xml</cfgFilePath>
 		</project>
 	</projects>
 </cfg>

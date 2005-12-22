@@ -1,24 +1,24 @@
-from Project import Project
 import thread
+
+from PagesContainer import NoMorePages
+from Project import Project
+import Listened
 
 
 class SiteDownloader(object):
 	def __init__(self):
-		self.readCfg()
-		self.project = self.defProjectData['project']
-		self.project.readCfg(self.defProjectData['cfgFileName'])
+		self.loadCfg()
+		self.setActiveProject(self.defProjectData['project'])
 		self.__isActive = False
-		self.activityListeners = []
-		self.projectListeners = []
 
 
-	def readCfg(self):
+	def loadCfg(self):
 		import os.path
 		import xml.dom.minidom as minidom
 
-		cfgFileName = os.path.dirname(__file__) + '/../SiteDownloader.cfg.xml'
+		cfgFilePath = os.path.dirname(__file__) + '/../SiteDownloader.cfg.xml'
 
-		cfgNode = minidom.parse(cfgFileName).getElementsByTagName('cfg')[0]
+		cfgNode = minidom.parse(cfgFilePath).getElementsByTagName('cfg')[0]
 		projectsNode = cfgNode.getElementsByTagName('projects')[0]
 		projectNodes = projectsNode.getElementsByTagName('project')
 
@@ -27,14 +27,19 @@ class SiteDownloader(object):
 		self.defProjectData = None
 		for projectNode in projectNodes:
 			projectName = projectNode.getElementsByTagName('name')[0].childNodes[0].data
-			projectCfgFileName = projectNode.getElementsByTagName('cfgFileName')[0].childNodes[0].data
-			projectCfgFileName = os.path.join(os.path.dirname(cfgFileName), projectCfgFileName)
+			projectCfgFilePath = projectNode.getElementsByTagName('cfgFilePath')[0].childNodes[0].data
+			projectCfgFilePath = os.path.join(os.path.dirname(cfgFilePath), projectCfgFilePath)
 			isDefault = projectNode.getElementsByTagName('isDefault').length == 1
 
-			project = Project(name = projectName)
+			from ProjectCfg import ProjectCfg
+			cfg = ProjectCfg(
+				filePath = projectCfgFilePath,
+				name = projectName
+			)
+			project = Project(cfg = cfg)
 			projectData = {
 				'project': project,
-				'cfgFileName': projectCfgFileName,
+				'cfgFilePath': projectCfgFilePath,
 				'isDefault': isDefault,
 			}
 
@@ -48,10 +53,23 @@ class SiteDownloader(object):
 			self.defProjectData = self.projectsData[0]
 
 
-	def setProject(self, project):
+	def __mainLoop(self):
+		while self.isActive():
+			try:
+				self.project.storeNextPage()
+			except NoMorePages:
+				self.stop()
+			except Exception:
+				self.stop()
+				raise
+
+
+	def setActiveProject(self, project):
+		# indexes in self.projectsData must equal to indexes in self.projects
 		i = self.projects.index(project)
-		project.readCfg(self.projectsData[i]['cfgFileName'])
-		self.project = project
+		self.projectData = self.projectsData[i]
+		self.project = self.projectData['project']
+		self.project.setActive()
 		self.notifyProjectListeners()
 
 
@@ -70,32 +88,8 @@ class SiteDownloader(object):
 		self.notifyActivityListeners()
 
 
-	def addActivityListener(self, listener):
-		self.activityListeners.append(listener)
+	addActivityListener = Listened.getAddListenerMethod('activity')
+	notifyActivityListeners = Listened.getNotifyListenersMethod('activity')
 
-
-	def notifyActivityListeners(self):
-		for listener in self.activityListeners:
-			listener()
-
-
-	def addProjectListener(self, listener):
-		self.projectListeners.append(listener)
-
-
-	def notifyProjectListeners(self):
-		for listener in self.projectListeners:
-			listener()
-
-
-	def __mainLoop(self):
-		from Project import NoMorePages
-		while self.isActive():
-			try:
-				self.project.storeNextPage()
-			except NoMorePages:
-				self.stop()
-			except Exception:
-				self.stop()
-				raise
-
+	addProjectListener = Listened.getAddListenerMethod('project')
+	notifyProjectListeners = Listened.getNotifyListenersMethod('project')
