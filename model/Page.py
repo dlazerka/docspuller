@@ -2,15 +2,15 @@ import re
 
 
 class Page(object):
-	def __init__(self, url, settings, parent = None):
+	def __init__(self, url, cfg, parent = None):
 		self.url = url
-		self.settings = settings
+		self.cfg = cfg
 		self.parent = parent
-		self.relPath = url[len(settings['remoteDir']) + 1:]
+		self.relPath = url[len(cfg['remoteDir']) + 1:]
 		self.statusListeners = []
 		self.links = []
 
-		if re.search(self.settings['regExp'], url):
+		if re.search(self.cfg['regExp'], url):
 			self.__status = 'queued'
 		else:
 			self.__status = 'failed regexp'
@@ -55,13 +55,13 @@ class Page(object):
 		import os
 
 		subdirs = self.relPath.split('/')[:-1]
-		cur = self.settings['localDir']
+		cur = self.cfg['localDir']
 		for subdir in subdirs:
 			cur = cur + '/' + subdir
 			if not os.path.exists(cur):
 				os.mkdir(cur)
 
-		path = '%s/%s' % (self.settings['localDir'], self.relPath)
+		path = '%s/%s' % (self.cfg['localDir'], self.relPath)
 		try:
 			dstFile = file(path, 'wb')
 		except IOError:
@@ -79,7 +79,7 @@ class Page(object):
 
 		for link in re.findall('(?:href|rel|src)="([^"]+?)"', self.contents):
 			link = urlparse.urljoin(self.url, link)
-			if link[0:len(self.settings['remoteDir'])] == self.settings['remoteDir']:
+			if link[0:len(self.cfg['remoteDir'])] == self.cfg['remoteDir']:
 				self.links.append(link)
 
 		self.status = 'parsed'

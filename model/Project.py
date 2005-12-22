@@ -38,13 +38,15 @@ class Project(object):
 			self.cfg['name'] = name
 		if firstUrl:
 			self.cfg['firstUrl'] = firstUrl
+		if localDir:
+			self.cfg['localDir'] = localDir
+		if regExp:
+			self.cfg['regExp'] = regExp
+			
+		if firstUrl:
 			if not remoteDir:
 				self.cfg['remoteDir'] = re.sub('/[^/]*$', '', firstUrl)
 			self.addUrl(firstUrl)
-		if localDir:
-			self.localDir = localDir
-		if regExp:
-			self.regExp = regExp
 
 
 	def addUrl(self, url, parentPage = None):

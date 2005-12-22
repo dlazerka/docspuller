@@ -61,7 +61,11 @@ class Ui:
 		localDir = self.widgets['entryLocalDir'].get()
 		firstUrl = self.widgets['entryFirstUrl'].get()
 		regExp = self.widgets['entryRegExp'].get()
-		CONTROLLER.start(localDir = localDir, firstUrl = firstUrl, regExp = regExp)
+		CONTROLLER.start(
+			localDir = localDir,
+			firstUrl = firstUrl,
+			regExp = regExp
+		)
 		#self.refreshControls()
 
 
