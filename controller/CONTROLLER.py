@@ -23,6 +23,10 @@ def saveProject(name, firstUrl, localDir, regExp):
 	MODEL.siteDownloader.project.cfg.save()
 
 
+def resetProject():
+	MODEL.siteDownloader.project.cfg.load()
+
+
 def toPrevProject(**args):
 	__toProject(-1)
 

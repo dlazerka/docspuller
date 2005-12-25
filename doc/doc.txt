@@ -5,7 +5,7 @@ ToDo:
 	f bad characters in urls (and conflicted filenames)
 	f validating project settings
 	ñ clarify PageStatus
-	
+
 
 
 Page statuses:

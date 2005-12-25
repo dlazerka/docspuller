@@ -27,21 +27,22 @@ class Ui:
 		# Binds
 		def quit(*args):
 			self.tk.quit()
-		
+
 		self.tk.bind('<Escape>', quit)
 		self.widgets['buttonProjectPrev'].configure({'command': CONTROLLER.toPrevProject})
 		self.widgets['buttonProjectNext'].configure({'command': CONTROLLER.toNextProject})
 		self.widgets['buttonProjectSave'].configure({'command': self.saveProject})
+		self.widgets['buttonProjectReset'].configure({'command': self.resetProject})
 		self.widgets['checkbuttonShowAllPages'].configure({'command': self.refreshPagesList})
 		self.widgets['buttonQuit'].configure({'command': quit})
 		self.widgets['buttonControl'].configure({'command': self.actStart})
 		self.widgets['entryRegExp'].bind('<KeyRelease>', self.regExpTyping)
-		
+
 		MODEL.siteDownloader.addActivityListener(self.refreshControls)
-		MODEL.siteDownloader.addProjectListener(self.projectChanged)
+		MODEL.siteDownloader.addProjectListener(self.projectSuperseded)
 		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
-		
-		
+
+
 	def saveProject(self):
 		name = self.widgets['entryProject'].get()
 		localDir = self.widgets['entryLocalDir'].get()
@@ -55,11 +56,15 @@ class Ui:
 		)
 
 
-	def projectChanged(self):
+	def resetProject(self):
+		CONTROLLER.resetProject()
+		self.refreshControls()
+
+
+	def projectSuperseded(self):
 		MODEL.siteDownloader.project.pagesContainer.addNewPageListener(self.addPage)
 		self.refreshControls()
 		self.refreshPagesList()
-			
 
 
 	def actStart(self):
@@ -87,7 +92,7 @@ class Ui:
 			self.widgets['buttonControl'].configure({'text': 'Start', 'command': self.actStart})
 			self.widgets['entryFirstUrl'].configure({'state': 'normal'})
 			self.widgets['entryLocalDir'].configure({'state': 'normal'})
-			
+
 		project = MODEL.siteDownloader.project
 		isFirst = MODEL.siteDownloader.projects.index(project) == 0
 		isLast = MODEL.siteDownloader.projects.index(project) + 1 == len(MODEL.siteDownloader.projects)
@@ -294,7 +299,7 @@ class Ui:
 		self.widgets['buttonProjectReset'].pack({'side': 'left', 'fill': 'x',
 			'expand': 'yes', 'padx': '5 0',
 		})
-		
+
 		self.widgets['frameFirstUrl'].pack({'side': 'top', 'fill': 'x'})
 		self.widgets['labelFirstUrl'].pack({'side': 'left'})
 		self.widgets['entryFirstUrl'].pack({'side': 'left', 'fill': 'x', 'expand': 'yes'})

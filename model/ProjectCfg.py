@@ -35,14 +35,6 @@ class ProjectCfg:
 		remoteDir = None,
 		regExp = None,
 	):
-		self.notifyListeners(
-			name = name,
-			firstUrl = firstUrl,
-			localDir = localDir,
-			remoteDir = remoteDir,
-			regExp = regExp,
-		)
-
 		if name:
 			self.name = name
 		if firstUrl:
@@ -56,12 +48,23 @@ class ProjectCfg:
 			if not remoteDir:
 				self.remoteDir = re.sub('/[^/]*$', '', firstUrl)
 
+		self.notifyListeners(
+			name = name,
+			firstUrl = firstUrl,
+			localDir = localDir,
+			remoteDir = remoteDir,
+			regExp = regExp,
+		)
+
 
 	def save(self):
-		pass
-		#f = file(self.filePath, 'w')
-		#f.write(self.cfgDOM.toprettyxml())
-		#f.close()
+		string = StringIO()
+		def Dom2String(dom, string, currentNode = None):
+			return string.dom.toxml()
+
+		f = file(self.filePath + '.cpy', 'w')
+		f.write(string)
+		f.close()
 
 
 	def isLoaded(self):
@@ -69,7 +72,6 @@ class ProjectCfg:
 
 
 	addListener = Listened.getAddListenerMethod('')
-	# listeners are notified BEFORE attributes change
 	notifyListeners = Listened.getNotifyListenersMethod('')
 
 
