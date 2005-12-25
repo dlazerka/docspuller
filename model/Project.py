@@ -8,6 +8,7 @@ class Project:
 		self.cfg = cfg
 		self.pagesContainer = PagesContainer()
 		self.cfg.addListener(self.cfgChanged)
+		self.pagesContainer.addNewPageListener(self.cfg.newPageListener)
 
 
 	def cfgChanged(self, **args):

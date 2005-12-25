@@ -21,7 +21,7 @@ class PagesContainer:
 		self.pages.append(page)
 		page.id = self.pages.index(page)
 
-		if page.status == 'queued':
+		if page.getStatus() == 'queued':
 			self.queued.append(page)
 
 		self.notifyNewPageListeners(page)

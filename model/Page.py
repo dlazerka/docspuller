@@ -12,9 +12,9 @@ class Page(object):
 		self.links = []
 
 		if re.search(self.projectCfg.regExp, url):
-			self.__status = 'queued'
+			self.setStatus('queued')
 		else:
-			self.__status = 'failed regexp'
+			self.setStatus('failed regexp')
 
 
 	def getStatus(self):
@@ -26,24 +26,21 @@ class Page(object):
 		self.notifyStatusListeners(self)
 
 
-	status = property(getStatus, setStatus)
-
-
 	addStatusListener = Listened.getAddListenerMethod('status')
 	notifyStatusListeners = Listened.getNotifyListenersMethod('status')
 
 
 	def fetchContents(self):
-		self.status = 'fetching...'
+		self.setStatus('fetching...')
 		try:
 			import urllib
 			resource = urllib.URLopener().open(self.url)
 		except IOError:
-			self.status = 'fetching failed'
+			self.setStatus('fetching failed')
 			return False
 		else:
 			self.contents = resource.read()
-			self.status = 'fetched'
+			self.setStatus('fetched')
 			return True
 
 
@@ -61,12 +58,12 @@ class Page(object):
 		try:
 			dstFile = file(path, 'wb')
 		except IOError:
-			self.status = 'saving failed'
+			self.setStatus('saving failed')
 			raise
 		else:
 			dstFile.write(self.contents)
 			dstFile.close()
-			self.status = 'saved'
+			self.setStatus('saved')
 
 
 	def parse(self):
@@ -78,4 +75,4 @@ class Page(object):
 			if link[0:len(self.projectCfg.remoteDir)] == self.projectCfg.remoteDir:
 				self.links.append(link)
 
-		self.status = 'parsed'
+		self.setStatus('parsed')

@@ -117,10 +117,11 @@ class Ui:
 
 
 	def addPage(self, page):
-		if page.status == 'failed regexp' and not self.widgets['checkbuttonShowAllPages'].isSelected.get():
+		if page.getStatus() == 'failed regexp' \
+			and not self.widgets['checkbuttonShowAllPages'].isSelected.get():
 			return
 
-		page.addStatusListener(self.pageStatusChanged)
+		page.addStatusListener(self.pageStatusListener)
 
 		lineStart = self.widgets['pagesList'].index('End')
 
@@ -132,7 +133,7 @@ class Ui:
 
 		self.widgets['pagesList'].mark_set('Page%sStatusStart' % id(page), 'End')
 		self.widgets['pagesList'].mark_gravity('Page%sStatusStart' % id(page), 'left')
-		self.widgets['pagesList'].insert('End', page.status);
+		self.widgets['pagesList'].insert('End', page.getStatus());
 		self.widgets['pagesList'].mark_set('Page%sStatusEnd' % id(page), 'End')
 		self.widgets['pagesList'].mark_gravity('Page%sStatusEnd' % id(page), 'left')
 		self.widgets['pagesList'].insert('End', '\n');
@@ -141,15 +142,15 @@ class Ui:
 
 		self.widgets['pagesList'].tag_add('Page%s' % id(page), lineStart, 'End');
 
-		if page.status == 'failed regexp':
+		if page.getStatus() == 'failed regexp':
 			self.widgets['pagesList'].tag_configure('Page%s' % id(page), {
 				'background': '#eeeeee',
 			});
 
 
-	def pageStatusChanged(self, page):
+	def pageStatusListener(self, page):
 		self.widgets['pagesList'].delete('Page%sStatusStart' % id(page), 'Page%sStatusEnd' % id(page));
-		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.status);
+		self.widgets['pagesList'].insert('Page%sStatusStart' % id(page), page.getStatus());
 
 
 	def refreshPagesList(self):

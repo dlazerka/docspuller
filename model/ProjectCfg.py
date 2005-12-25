@@ -1,5 +1,7 @@
 import xml.dom.minidom
 import re
+from StringIO import StringIO
+
 
 import Listened
 
@@ -16,8 +18,8 @@ class ProjectCfg:
 
 
 	def load(self):
-		self.cfgDOM = xml.dom.minidom.parse(self.filePath)
-		cfgNode = self.cfgDOM.getElementsByTagName('cfg')[0]
+		self.cfgDom = xml.dom.minidom.parse(self.filePath)
+		cfgNode = self.cfgDom.getElementsByTagName('cfg')[0]
 
 		self.name = cfgNode.getElementsByTagName('name')[0].childNodes[0].data
 		self.firstUrl = cfgNode.getElementsByTagName('firstUrl')[0].childNodes[0].data
@@ -58,13 +60,30 @@ class ProjectCfg:
 
 
 	def save(self):
-		string = StringIO()
-		def Dom2String(dom, string, currentNode = None):
-			return string.dom.toxml()
+		w = StringIO()
+		dom = self.cfgDom
+		w.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+		dom.childNodes[0].writexml(w, '', '')
+		s = w.getvalue()
 
 		f = file(self.filePath + '.cpy', 'w')
-		f.write(string)
+		f.write(s)
 		f.close()
+
+
+	def newPageListener(self, page):
+		pageNode = self.cfgDom.createElement('page');
+		urlNode = self.cfgDom.createElement('url');
+		statusNode = self.cfgDom.createElement('status');
+		urlTextNode = self.cfgDom.createTextNode(page.url);
+		statusTextNode = self.cfgDom.createTextNode(page.getStatus());
+
+		pagesNode = self.cfgDom.getElementsByTagName('pages')[0]
+		pagesNode.appendChild(pageNode)
+		pageNode.appendChild(urlNode)
+		urlNode.appendChild(urlTextNode)
+		pageNode.appendChild(statusNode)
+		statusNode.appendChild(statusTextNode)
 
 
 	def isLoaded(self):

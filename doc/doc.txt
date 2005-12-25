@@ -1,5 +1,6 @@
 ToDo:
-	f cfg saving (own DOM->XML)
+	! pages from cfg must be in pagesList before Start
+	f pages saving to cfg
 	f VIEW: pagesList's scrollbar
 	f step-by-step working (Stop -> Pause)
 	f bad characters in urls (and conflicted filenames)
